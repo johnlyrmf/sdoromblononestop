@@ -1,0 +1,15 @@
+{
+  "id": "/portal/",
+  "name": "SDO Romblon OneStop",
+  "short_name": "Romblon OneStop",
+  "description": "Schools Division Office of Romblon service request portal.",
+  "start_url": "/portal/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f7f3",
+  "theme_color": "#07142d",
+  "icons": [
+    { "src": "/assets/icons/deped-app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icons/deped-app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
