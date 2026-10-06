@@ -1,0 +1,100 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function activeProfile() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active'
+        );
+    }
+
+    function isICTStaff() {
+      return activeProfile()
+        && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.unitId == 'ICT Unit'
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        );
+    }
+
+    function isAdmin() {
+      return activeProfile()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isAnonymousRequester() {
+      return signedIn() && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+
+    match /users/{userId} {
+      allow read: if (
+          activeProfile() && (request.auth.uid == userId || isAdmin())
+        ) || (
+          signedIn()
+          && request.auth.uid == userId
+          && request.auth.token.email == 'sdo@deped.gov.ph'
+        );
+      allow create: if isAdmin()
+        || (
+          signedIn()
+          && request.auth.uid == userId
+          && request.auth.token.email == 'sdo@deped.gov.ph'
+          && request.resource.data.email == 'sdo@deped.gov.ph'
+          && request.resource.data.unitId == 'ICT Unit'
+          && request.resource.data.role == 'admin'
+          && request.resource.data.status == 'active'
+        );
+      allow update, delete: if isAdmin();
+    }
+
+    match /requests/{requestId} {
+      allow create: if isAnonymousRequester()
+        && request.resource.data.unitId == 'ICT Unit'
+        && request.resource.data.status == 'submitted'
+        && request.resource.data.requesterUid == request.auth.uid
+        && request.resource.data.trackingNumber != null
+        && request.resource.data['service'] != null
+        && request.resource.data.createdAt != null;
+
+      allow read: if isICTStaff()
+        || (signedIn() && resource.data.requesterUid == request.auth.uid);
+
+      allow update: if isICTStaff()
+        || (signedIn()
+          && resource.data.requesterUid == request.auth.uid
+          && request.resource.data.requesterUid == request.auth.uid
+          && request.resource.data.unitId == resource.data.unitId);
+
+      allow delete: if isAdmin();
+    }
+
+    match /request_events/{eventId} {
+      allow read: if isICTStaff()
+        || (
+          signedIn()
+          && resource.data.visibleToRequester == true
+          && resource.data.requesterUid == request.auth.uid
+        );
+      allow create: if isICTStaff()
+        || (
+          signedIn()
+          && request.resource.data.senderRole == 'requester'
+          && request.resource.data.visibleToRequester == true
+          && request.resource.data.requesterUid == request.auth.uid
+          && exists(/databases/$(database)/documents/requests/$(request.resource.data.requestId))
+          && get(/databases/$(database)/documents/requests/$(request.resource.data.requestId)).data.requesterUid == request.auth.uid
+        );
+      allow update, delete: if isAdmin();
+    }
+
+    match /request_documents/{documentId} {
+      allow read, write: if isICTStaff();
+    }
+  }
+}

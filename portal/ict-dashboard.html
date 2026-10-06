@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ICT Workspace · SDO Romblon OneStop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="inner-page ict-dashboard-shell">
+    <header class="site-header"><a class="brand" href="index.html"><span class="sdo-logo logo-mask"><img src="../assets/logos/deped-romblon.png" alt="SDO Romblon seal" /></span><span class="brand-copy"><small>Schools Division Office</small><strong>Romblon OneStop</strong></span></a><a class="nav-sign-in compact-sign-in" id="header-staff-sign-out" href="sign-in.html">Sign out <span>→</span></a></header>
+    <main class="ict-dashboard-page" id="ict-dashboard-page">
+      <div class="ict-dashboard-glow" aria-hidden="true"></div>
+      <div class="ict-dashboard-top"><div><p class="eyebrow">ICT Unit · Staff workspace</p><h1>Good day, <span id="staff-name">ICT staff</span>.</h1><p>Review incoming requests and keep each ICT response moving.</p></div><div class="staff-profile"><span class="profile-avatar">ICT</span><div><strong id="staff-email-label">Awaiting sign-in</strong><small>ICT service desk</small></div><button id="staff-sign-out" type="button">Sign out</button></div></div>
+      <div class="ict-dashboard-stats"><article><span>OPEN REQUESTS</span><strong id="ict-request-count">0</strong><small>In the ICT queue</small></article><article><span>WORKSPACE</span><strong>ICT</strong><small>Access is role-protected</small></article><article><span>RESPONSE</span><strong>LIVE</strong><small>Queue updates appear here</small></article></div>
+      <section class="ict-queue-card"><div class="queue-heading"><div><p class="form-kicker">REQUEST QUEUE</p><h2>Incoming ICT requests</h2></div><div class="queue-heading-actions"><label class="queue-filter"><span>VIEW</span><select id="ict-status-filter" aria-label="Filter request list"><option value="active" selected>Active requests</option><option value="all">All requests</option><option value="completed">Completed</option><option value="needs_reply">Needs your reply</option><option value="declined">Declined</option></select></label><button class="queue-tools-button" id="open-unit-account-modal" type="button" hidden>Create unit account</button><button class="queue-tools-button" type="button" data-open-password-reset>Reset staff password</button><span class="queue-live"><i></i> Live</span></div></div><p class="dashboard-message" id="ict-dashboard-message" role="status" hidden></p><div id="ict-queue" class="ict-queue"><div class="ict-queue-empty"><span>◌</span><strong>Loading ICT requests</strong><small>Checking the secure queue…</small></div></div></section>
+      <section class="ict-email-applications-card"><div class="queue-heading"><div><p class="form-kicker">ACCOUNT APPLICATIONS</p><h2>New DepEd email requests</h2><p class="queue-section-copy">A focused view of employees requesting a new DepEd email account.</p></div><div class="email-application-tools"><label class="queue-filter"><span>VIEW</span><select id="ict-email-view-filter" aria-label="Filter email applications"><option value="active" selected>Active applications</option><option value="all">All applications</option><option value="completed">Completed</option><option value="declined">Declined</option><option value="needs_reply">Needs your reply</option></select></label><label class="queue-filter"><span>SORT</span><select id="ict-email-sort" aria-label="Sort email applications"><option value="newest" selected>Newest first</option><option value="oldest">Oldest first</option><option value="applicant">Applicant A–Z</option></select></label><span class="queue-count-badge"><strong id="ict-email-request-count">0</strong> applicants</span></div></div><div class="email-applications-table-wrap"><table class="email-applications-table"><thead><tr><th>Applicant</th><th>School</th><th>School ID</th><th>Status</th><th>Remarks</th><th><span class="sr-only">Action</span></th></tr></thead><tbody id="ict-email-applications"><tr><td colspan="6"><div class="ict-queue-empty"><span>◌</span><strong>Loading applications</strong><small>Checking the account request list…</small></div></td></tr></tbody></table></div></section>
+      <div class="modal-backdrop" id="ict-action-modal" hidden>
+        <section class="modal-card ict-action-modal-card" role="dialog" aria-modal="true" aria-labelledby="ict-action-title">
+          <header class="modal-header"><div><p class="form-kicker">ICT REQUEST ACTIONS</p><div class="modal-request-heading"><div><h2 id="ict-action-title">Request DTR</h2><p id="ict-action-requester">Requester details</p></div><strong id="ict-action-tracking">SDO-0000-00000</strong></div></div><button class="modal-close" type="button" data-modal-close aria-label="Close request actions">×</button></header>
+          <div class="modal-scroll-content">
+            <div class="modal-request-details" id="ict-action-details"></div>
+            <div class="modal-event-list" id="ict-action-timeline"><p class="modal-muted">No updates yet.</p></div>
+            <form id="ict-action-form" class="modal-action-form">
+            <div class="action-section action-update-section">
+              <div class="action-section-heading"><div><p class="form-kicker">UPDATE THE REQUEST</p><strong>Keep the requester informed</strong></div><span>VISIBLE TO REQUESTER</span></div>
+              <label class="status-field">Status<div class="status-select" id="ict-status-select-shell"><select id="ict-action-status" aria-hidden="true" tabindex="-1"></select><button class="status-select-trigger" id="ict-status-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"><span>Submitted</span><i aria-hidden="true"></i></button><div class="status-select-menu" id="ict-status-select-menu" role="listbox" hidden></div></div></label>
+              <label class="action-message-field">Message for requester<textarea id="ict-action-message" rows="3" placeholder="Write the next update for the requester"></textarea></label>
+            </div>
+            <div class="credential-delivery-panel">
+              <div class="credential-delivery-heading"><div><p class="form-kicker">ACCOUNT ACTIVATION</p><strong>Send the secure sign-in notice</strong><small>Use this only after manually creating the account in Google Admin.</small></div><span>ICT ONLY</span></div>
+              <div class="credential-fields-grid">
+                <label>New DepEd email address<input id="ict-credential-deped-email" type="email" placeholder="name@deped.gov.ph" /></label>
+                <label>Send notice to<input id="ict-credential-recipient" type="email" readonly /></label>
+                <label class="credential-password-field">Unique temporary password<input id="ict-temporary-password" type="password" autocomplete="new-password" placeholder="Paste the unique password from Google Admin" /></label>
+              </div>
+              <div class="credential-delivery-note"><span>i</span><p>The temporary password is used only for this send action. It is never written to Firestore, request history, or logs.</p></div>
+              <div class="credential-delivery-actions"><button class="modal-secondary-action" id="ict-send-credential-email" type="button">Open prepared Gmail message <span>↗</span></button><small>Recipient: verified recovery email · Send it, then save the update</small></div>
+              <p class="modal-form-message" id="ict-credential-message" role="status" hidden></p>
+            </div>
+            </form>
+          </div>
+          <footer class="ict-action-modal-footer action-support-row"><label class="modal-upload">Attach a document <input id="ict-action-attachment" type="file" /><small>Document metadata is recorded with this update.</small></label><div class="action-save-column"><p class="modal-form-message" id="ict-action-form-message" role="status" hidden></p><button class="modal-primary-action" form="ict-action-form" type="submit">Save update <span>↗</span></button><button class="modal-danger-action" id="ict-delete-request" type="button" hidden>Delete request</button></div></footer>
+        </section>
+      </div>
+      <div class="modal-backdrop confirmation-backdrop" id="ict-delete-modal" hidden>
+        <section class="modal-card compact-confirmation-card" role="alertdialog" aria-modal="true" aria-labelledby="ict-delete-title" aria-describedby="ict-delete-copy">
+          <button class="modal-close" id="ict-delete-close" type="button" aria-label="Cancel deletion">×</button>
+          <p class="form-kicker">PERMANENT ACTION</p>
+          <h2 id="ict-delete-title">Delete this request?</h2>
+          <p id="ict-delete-copy">Request <strong id="ict-delete-tracking"></strong> and its timeline will be permanently removed from the queue.</p>
+          <p class="modal-form-message" id="ict-delete-message" role="status" hidden></p>
+          <div class="compact-confirmation-actions"><button class="ict-delete-cancel" id="ict-delete-cancel" type="button">Keep request</button><button class="ict-delete-confirm" id="ict-delete-confirm" type="button">Delete permanently</button></div>
+        </section>
+      </div>
+      <div class="modal-backdrop" id="unit-account-modal" hidden>
+        <section class="modal-card unit-account-modal-card" role="dialog" aria-modal="true" aria-labelledby="unit-account-title">
+          <header class="modal-header"><div><p class="form-kicker">ICT ACCOUNT TOOLS</p><div class="modal-request-heading"><div><h2 id="unit-account-title">Create a unit account</h2><p>Provision staff access for another SDO office.</p></div></div></div><button class="modal-close" type="button" data-modal-close aria-label="Close create account">×</button></header>
+          <form class="modal-action-form" id="unit-account-form">
+            <label for="unit-account-name">Staff member’s full name<input id="unit-account-name" name="displayName" type="text" autocomplete="name" maxlength="120" placeholder="e.g. Maria Santos" required /></label>
+            <label for="unit-account-email">Official DepEd email<input id="unit-account-email" name="email" type="email" autocomplete="email" placeholder="name@deped.gov.ph" required /><small class="password-reset-hint">A secure password setup link will be sent to this address.</small></label>
+            <label for="unit-account-unit">Assigned unit<select id="unit-account-unit" name="unitName" required><option value="" selected disabled>Choose a unit</option><option>Budget Unit</option><option>Accounting Unit</option><option>Cashier Unit</option><option>Records Unit</option><option>Personnel Unit</option><option>Supply Unit</option><option value="CID">Curriculum Implementation Division (CID)</option><option value="SGOD">School Governance and Operations Division (SGOD)</option><option value="OSDS">Office of the Schools Division Superintendent (OSDS)</option><option>Legal Unit</option></select></label>
+            <p class="unit-account-security-note">The password is set by the staff member through a one-time Firebase email link. ICT never sees or stores it.</p>
+            <p class="modal-form-message" id="unit-account-message" role="status" hidden></p>
+            <button class="modal-primary-action" type="submit">Create account and send setup link <span>↗</span></button>
+          </form>
+        </section>
+      </div>      <div class="modal-backdrop" id="password-reset-modal" hidden>
+        <section class="modal-card password-reset-modal-card" role="dialog" aria-modal="true" aria-labelledby="password-reset-title">
+          <div class="modal-scroll-content">
+            <header class="modal-header"><div><p class="form-kicker">ICT ACCOUNT TOOLS</p><div class="modal-request-heading"><div><h2 id="password-reset-title">Send a password reset</h2><p>Use the staff member’s official email.</p></div></div></div><button class="modal-close" type="button" data-modal-close aria-label="Close password reset">×</button></header>
+            <form id="password-reset-form" class="modal-action-form">
+              <label for="password-reset-email">Staff official email<input id="password-reset-email" type="email" placeholder="name@deped.gov.ph" autocomplete="email" required /><small class="password-reset-hint">This sends Firebase’s secure reset link to that staff member.</small></label>
+              <p class="modal-form-message" id="password-reset-message" role="status" hidden></p>
+              <button class="modal-primary-action" type="submit">Send reset email <span>↗</span></button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
+    <script src="app.js"></script>
+    <script type="module" src="firebase-client.js"></script>
+  </body>
+</html>

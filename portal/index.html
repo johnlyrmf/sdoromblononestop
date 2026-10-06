@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#07142d" />
+    <title>SDO Romblon OneStop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="home-page">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="SDO Romblon OneStop home">
+        <span class="sdo-logo logo-mask"><img src="../assets/logos/deped-romblon.png" alt="SDO Romblon seal" /></span>
+        <span class="brand-copy"><small>Schools Division Office</small><strong>Romblon OneStop</strong></span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation"><span></span><span></span><span></span><b>Menu</b></button>
+      <nav class="site-nav" id="site-navigation" aria-label="Primary navigation">
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-trigger" type="button" aria-expanded="false" aria-controls="unit-menu">Choose a unit <span class="chevron" aria-hidden="true"></span></button>
+          <div class="unit-menu" id="unit-menu">
+            <p>Start a request</p>
+            <a href="choose-unit.html">View all offices <span>↗</span></a>
+            <a href="unit-services.html?unit=ICT%20Unit">ICT Unit <span>↗</span></a>
+            <a href="unit-services.html?unit=OSDS">OSDS <span>↗</span></a>
+            <a href="unit-services.html?unit=Personnel%20Unit">Personnel Unit <span>↗</span></a>
+          </div>
+        </div>
+        <a href="how-it-works.html">How it works</a>
+        <a href="help.html">Help</a>
+        <a class="nav-sign-in" href="sign-in.html">Sign in <span>→</span></a>
+      </nav>
+    </header>
+
+    <main class="onboarding-shell">
+      <section class="onboarding-hero" aria-labelledby="hero-title">
+        <div class="hero-grid" aria-hidden="true"></div>
+        <div class="hero-copy">
+          <div class="hero-label"><span></span> Schools Division Office of Romblon</div>
+          <h1 id="hero-title">A clearer way to<br /><em>get things done.</em></h1>
+          <p>One secure place to submit requests, follow every update, and receive documents from the Schools Division Office of Romblon.</p>
+          <div class="hero-actions">
+            <a class="primary-action" href="choose-unit.html">Start a request <span>↗</span></a>
+            <a class="secondary-action" href="track-request.html">Track a request</a>
+          </div>
+          <p class="track-note">Have a tracking number? Open your request timeline anytime.</p>
+        </div>
+        <div class="hero-identity" aria-hidden="true">
+          <div class="identity-orbit orbit-one"></div><div class="identity-orbit orbit-two"></div>
+          <div class="identity-card">
+            <div class="identity-topline"><span>SDO</span><span>ROMBLON</span></div>
+            <div class="hero-logo logo-mask"><img src="../assets/logos/deped-romblon.png" alt="" /></div>
+            <div class="identity-caption">Service, made<br /><i>simple.</i></div>
+          </div>
+          <div class="signal-card"><span class="signal-dot"></span><span>Requests move with you.</span></div>
+        </div>
+      </section>
+
+      <section class="promise-strip" aria-label="What OneStop provides">
+        <article><span>01 / REQUEST</span><h2>Ask once.</h2><p>Choose the office and service you need.</p></article>
+        <article><span>02 / TRACK</span><h2>See every step.</h2><p>Keep one tracking number from start to finish.</p></article>
+        <article><span>03 / RECEIVE</span><h2>Know when it is ready.</h2><p>Get notified when a document is ready for release.</p></article>
+      </section>
+    </main>
+    <script src="app.js"></script>
+    <script type="module" src="firebase-client.js"></script>
+  </body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Track a Request · SDO Romblon OneStop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="inner-page track-page-shell">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="SDO Romblon OneStop home"><span class="sdo-logo logo-mask"><img src="../assets/logos/deped-romblon.png" alt="SDO Romblon seal" /></span><span class="brand-copy"><small>Schools Division Office</small><strong>Romblon OneStop</strong></span></a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation"><span></span><span></span><span></span><b>Menu</b></button>
+      <nav class="site-nav" id="site-navigation" aria-label="Primary navigation">
+        <div class="nav-dropdown"><button class="nav-dropdown-trigger" type="button" aria-expanded="false" aria-controls="unit-menu">Choose a unit <span class="chevron" aria-hidden="true"></span></button><div class="unit-menu" id="unit-menu"><p>Start a request</p><a href="choose-unit.html">View all offices <span>↗</span></a><a href="unit-services.html?unit=ICT%20Unit">ICT Unit <span>↗</span></a><a href="unit-services.html?unit=OSDS">OSDS <span>↗</span></a><a href="unit-services.html?unit=Personnel%20Unit">Personnel Unit <span>↗</span></a></div></div>
+        <a href="how-it-works.html">How it works</a><a href="help.html">Help</a><a class="nav-sign-in" href="sign-in.html">Sign in <span>→</span></a>
+      </nav>
+    </header>
+    <main class="inner-content track-page">
+      <a class="back-link" href="index.html">← Back to OneStop</a>
+      <div class="track-layout">
+        <section class="track-intro" aria-labelledby="track-title">
+          <p class="eyebrow">Request timeline</p>
+          <h1 id="track-title">Track your<br /><em>request.</em></h1>
+          <p class="service-description">Stay close to every update. Enter the tracking number you received after submitting your request.</p>
+          <div class="track-assurance"><span class="assurance-dot"></span><span>Your request history stays private and secure.</span></div>
+        </section>
+        <section class="tracking-card" aria-label="Request tracking form">
+          <div class="card-kicker"><span class="card-symbol">#</span><span>ONE TRACKING NUMBER</span></div>
+          <h2>Where is your request now?</h2>
+          <p>Use the reference shown in your confirmation message.</p>
+          <form class="tracking-form">
+            <label for="tracking-number">Tracking number</label>
+            <div class="tracking-input-wrap"><span aria-hidden="true">SDO</span><input id="tracking-number" type="text" placeholder="2026-00125" autocomplete="off" /></div>
+            <button class="primary-action" type="button">View request <span>↗</span></button>
+          </form>
+          <div class="timeline-preview" id="timeline-preview" aria-label="Request timeline">
+            <div class="timeline-line"></div>
+            <div class="timeline-row is-current"><span class="timeline-dot"></span><span><strong>Current status</strong><small>Updates appear here after lookup</small></span></div>
+            <div class="timeline-row"><span class="timeline-dot"></span><span><strong>Next step</strong><small>The assigned unit will process your request</small></span></div>
+          </div>
+          <p class="tracker-message" id="tracker-message" role="status" hidden></p>
+        </section>
+      </div>
+      <p class="track-help">You may also <a href="sign-in.html">sign in</a> to see all requests connected to your account.</p>
+    </main>
+    <div class="modal-backdrop" id="request-detail-modal" hidden>
+      <section class="modal-card request-detail-modal-card" role="dialog" aria-modal="true" aria-labelledby="request-detail-title">
+        <div class="modal-scroll-content">
+        <header class="modal-header"><div><p class="form-kicker">REQUEST DETAILS</p><div class="modal-request-heading"><div><h2 id="request-detail-title">Your request</h2><p id="request-detail-subtitle">ICT Unit</p></div><strong id="request-detail-tracking">SDO-0000-00000</strong></div></div><button class="modal-close" type="button" data-modal-close aria-label="Close request details">×</button></header>
+        <div class="request-status-banner" id="request-detail-status"></div>
+        <div class="modal-event-list" id="request-detail-timeline"></div>
+        <form id="requester-reply-form" class="modal-action-form requester-reply-form">
+          <label>Reply to ICT Unit<textarea id="requester-reply-message" rows="3" placeholder="Add information or ask a follow-up question"></textarea></label>
+          <label class="modal-upload">Attach a document <input id="requester-reply-attachment" type="file" /><small>Attach supporting information if ICT requested it.</small></label>
+          <p class="modal-form-message" id="requester-reply-message-status" role="status" hidden></p>
+          <button class="modal-primary-action" type="submit">Send reply <span>↗</span></button>
+        </form>
+        </div>
+      </section>
+    </div>
+    <script src="app.js"></script>
+    <script type="module" src="firebase-client.js"></script>
+  </body>
+</html>
