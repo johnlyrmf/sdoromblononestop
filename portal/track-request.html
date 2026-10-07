@@ -33,10 +33,10 @@
         <section class="tracking-card" aria-label="Request tracking form">
           <div class="card-kicker"><span class="card-symbol">#</span><span>ONE TRACKING NUMBER</span></div>
           <h2>Where is your request now?</h2>
-          <p>Use the reference shown in your confirmation message.</p>
+          <p>Your tracking number is your private access code. No email is needed.</p>
           <form class="tracking-form">
             <label for="tracking-number">Tracking number</label>
-            <div class="tracking-input-wrap"><span aria-hidden="true">SDO</span><input id="tracking-number" type="text" placeholder="2026-00125" autocomplete="off" /></div>
+            <div class="tracking-input-wrap"><span aria-hidden="true">SDO</span><input id="tracking-number" type="text" placeholder="2026-ABCD-1234-EF56-7890-ABCD-1234" autocomplete="off" /></div>
             <button class="primary-action" type="button">View request <span>↗</span></button>
           </form>
           <div class="timeline-preview" id="timeline-preview" aria-label="Request timeline">
@@ -56,8 +56,8 @@
         <div class="request-status-banner" id="request-detail-status"></div>
         <div class="modal-event-list" id="request-detail-timeline"></div>
         <form id="requester-reply-form" class="modal-action-form requester-reply-form">
-          <label>Reply to ICT Unit<textarea id="requester-reply-message" rows="3" placeholder="Add information or ask a follow-up question"></textarea></label>
-          <label class="modal-upload">Attach a document <input id="requester-reply-attachment" type="file" /><small>Attach supporting information if ICT requested it.</small></label>
+          <label>Reply to the assigned unit<textarea id="requester-reply-message" rows="3" placeholder="Add information or ask a follow-up question"></textarea></label>
+          <label class="modal-upload">Attach a document <input id="requester-reply-attachment" type="file" /><small>Attach supporting information if the assigned unit requested it.</small></label>
           <p class="modal-form-message" id="requester-reply-message-status" role="status" hidden></p>
           <button class="modal-primary-action" type="submit">Send reply <span>↗</span></button>
         </form>

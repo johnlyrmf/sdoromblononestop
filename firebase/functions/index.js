@@ -16,6 +16,116 @@ const gmailRefreshToken = defineSecret('GMAIL_REFRESH_TOKEN');
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DEPED_EMAIL_PATTERN = /^[^\s@]+@deped\.gov\.ph$/i;
+const TRACKING_PATTERN = /^SDO-\d{4}-(?:[0-9A-F]{4}-){5}[0-9A-F]{4}$/i;
+const LEGACY_TRACKING_PATTERN = /^SDO-\d{4}-\d{5}$/i;
+
+function trackingTimestamp(value) {
+  return value?.toDate ? value.toDate().toISOString() : null;
+}
+
+async function consumeTrackingRateLimit(request) {
+  const now = Date.now();
+  const rawIp = String(request.rawRequest?.ip || 'unknown');
+  const identifiers = [
+    ['uid', request.auth.uid, 12],
+    ['ip', crypto.createHash('sha256').update(rawIp).digest('hex'), 40],
+  ];
+  await db.runTransaction(async (transaction) => {
+    const refs = identifiers.map(([kind, value]) => db.doc(`tracking_lookup_limits/${kind}_${value}`));
+    const snapshots = await Promise.all(refs.map((ref) => transaction.get(ref)));
+    for (let index = 0; index < refs.length; index += 1) {
+      const previous = snapshots[index].exists ? snapshots[index].data() : {};
+      const count = previous.windowStartedAt > now - 60_000 ? Number(previous.count || 0) : 0;
+      if (count >= identifiers[index][2]) throw new HttpsError('resource-exhausted', 'Too many attempts. Wait a minute, then try again.');
+      transaction.set(refs[index], { count: count + 1, windowStartedAt: count ? previous.windowStartedAt : now });
+    }
+  });
+}
+
+async function findTrackedRequest(data) {
+  const trackingNumber = requiredText(data.trackingNumber, 'Tracking number').toUpperCase();
+  if (!TRACKING_PATTERN.test(trackingNumber) && !LEGACY_TRACKING_PATTERN.test(trackingNumber)) {
+    throw new HttpsError('not-found', 'We could not find a request matching that tracking number. Check it and try again.');
+  }
+  const isLegacyCode = LEGACY_TRACKING_PATTERN.test(trackingNumber);
+  const snapshot = await db.collection('requests').where('trackingNumber', '==', trackingNumber).limit(25).get();
+  const requestDoc = isLegacyCode
+    ? snapshot.docs.find((item) => item.data().requesterUid === data.requesterUid)
+    : snapshot.docs[0];
+  if (!requestDoc && isLegacyCode) {
+    throw new HttpsError('failed-precondition', 'Older five-digit tracking numbers only work in the browser used to submit the request.');
+  }
+  if (!requestDoc) throw new HttpsError('not-found', 'We could not find a request matching that tracking number. Check it and try again.');
+  return { requestDoc, record: requestDoc.data() };
+}
+
+function safeTrackingEvent(event) {
+  return {
+    status: String(event.status || 'submitted'),
+    message: String(event.message || ''),
+    senderRole: event.senderRole === 'requester' ? 'requester' : 'ict',
+    senderUnit: String(event.senderUnit || 'Assigned unit'),
+    attachment: event.attachment && typeof event.attachment.name === 'string' ? { name: event.attachment.name.slice(0, 200) } : null,
+    createdAt: trackingTimestamp(event.createdAt),
+  };
+}
+
+exports.lookupTrackedRequest = onCall({ region: 'asia-southeast1', enforceAppCheck: false }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Please try again.');
+  await consumeTrackingRateLimit(request);
+  const { requestDoc, record } = await findTrackedRequest({ ...(request.data || {}), requesterUid: request.auth.uid });
+  const eventSnapshot = await db.collection('request_events')
+    .where('requestId', '==', requestDoc.id)
+    .limit(200)
+    .get();
+  const events = eventSnapshot.docs.map((item) => item.data())
+    .filter((event) => event.visibleToRequester === true)
+    .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0))
+    .slice(0, 100)
+    .map(safeTrackingEvent);
+  return {
+    id: requestDoc.id,
+    trackingNumber: record.trackingNumber,
+    unitId: record.unitId || 'Assigned unit',
+    service: record.service || 'Service request',
+    status: record.status || 'submitted',
+    latestMessage: record.latestMessage || '',
+    latestMessageBy: record.latestMessageBy || '',
+    createdAt: trackingTimestamp(record.createdAt),
+    updatedAt: trackingTimestamp(record.updatedAt),
+    events,
+  };
+});
+
+exports.replyToTrackedRequest = onCall({ region: 'asia-southeast1', enforceAppCheck: false }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Please try again.');
+  await consumeTrackingRateLimit(request);
+  const data = request.data || {};
+  const { requestDoc, record } = await findTrackedRequest({ ...data, requesterUid: request.auth.uid });
+  const message = typeof data.message === 'string' ? data.message.trim() : '';
+  const inputAttachment = data.attachment && typeof data.attachment === 'object' ? data.attachment : null;
+  const attachment = inputAttachment && typeof inputAttachment.name === 'string'
+    ? { name: inputAttachment.name.trim().slice(0, 200), type: typeof inputAttachment.type === 'string' ? inputAttachment.type.slice(0, 120) : '', size: Number.isFinite(Number(inputAttachment.size)) ? Math.max(0, Math.min(Number(inputAttachment.size), 25_000_000)) : 0 }
+    : null;
+  if (message.length > 4000) throw new HttpsError('invalid-argument', 'Your message must be 4,000 characters or fewer.');
+  if (!message && !attachment?.name) throw new HttpsError('invalid-argument', 'Add a message or attach a document before sending.');
+  const visibleMessage = message || `Requester attached ${attachment.name}.`;
+  const batch = db.batch();
+  batch.update(requestDoc.ref, { latestMessage: visibleMessage, latestMessageBy: 'requester', updatedAt: FieldValue.serverTimestamp() });
+  batch.set(db.collection('request_events').doc(), {
+    requestId: requestDoc.id,
+    requesterUid: record.requesterUid || '',
+    status: record.status || 'submitted',
+    message: visibleMessage,
+    visibleToRequester: true,
+    senderRole: 'requester',
+    attachment,
+    createdBy: request.auth.uid,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  await batch.commit();
+  return { ok: true, message: visibleMessage };
+});
 
 function requiredText(value, field) {
   const text = typeof value === 'string' ? value.trim() : '';

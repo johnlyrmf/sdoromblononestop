@@ -66,10 +66,7 @@ service cloud.firestore {
         || (signedIn() && resource.data.requesterUid == request.auth.uid);
 
       allow update: if isICTStaff()
-        || (signedIn()
-          && resource.data.requesterUid == request.auth.uid
-          && request.resource.data.requesterUid == request.auth.uid
-          && request.resource.data.unitId == resource.data.unitId);
+        && request.resource.data.unitId == resource.data.unitId;
 
       allow delete: if isAdmin();
     }
@@ -81,7 +78,11 @@ service cloud.firestore {
           && resource.data.visibleToRequester == true
           && resource.data.requesterUid == request.auth.uid
         );
-      allow create: if isICTStaff()
+      allow create: if (
+          isICTStaff()
+          && request.resource.data.senderRole == 'ict'
+          && request.resource.data.senderUnit == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.unitId
+        )
         || (
           signedIn()
           && request.resource.data.senderRole == 'requester'

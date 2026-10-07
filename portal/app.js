@@ -13,6 +13,9 @@ const unitCatalog = {
   'Guided routing': { intro: 'Describe what you need. A designated service desk officer will guide or route your request.', services: ['Help me find the right office'] },
 };
 
+// Only units with a live workflow and unit-scoped queue may accept requests.
+const enabledRequestUnits = ['ICT Unit'];
+
 const ictRequestCatalog = {
   'Request DTR': {
     intro: 'Request your printed Daily Time Record or ask the ICT service desk to check a DTR concern.',
@@ -270,7 +273,8 @@ if (serviceOptions) {
   const statusLabel = document.querySelector('.service-page > .eyebrow');
   if (title) title.textContent = unitName in unitCatalog ? unitName : 'Choose an office';
 
-  if (unitName !== 'ICT Unit') {
+  const isGuidedRouting = unitName === 'Guided routing';
+  if (!enabledRequestUnits.includes(unitName) && !isGuidedRouting) {
     if (statusLabel) statusLabel.textContent = 'COMING SOON';
     if (description) description.textContent = unitName
       ? `Online requests for ${unitName in unitCatalog ? unitName : 'this office'} are not available yet. We are preparing this service. ICT Unit is currently accepting requests.`
@@ -289,7 +293,7 @@ if (serviceOptions) {
     notice.append(heading, copy, link);
     serviceOptions.replaceChildren(notice);
   } else {
-    if (statusLabel) statusLabel.textContent = 'AVAILABLE SERVICES';
+    if (statusLabel) statusLabel.textContent = isGuidedRouting ? 'GUIDED HELP' : 'AVAILABLE SERVICES';
     if (description) description.textContent = unit.intro;
     serviceOptions.innerHTML = unit.services.map((service) => `<a href="request-form.html?service=${encodeURIComponent(service)}&unit=${encodeURIComponent(unitName)}">${service}<span>↗</span></a>`).join('');
   }
@@ -303,7 +307,9 @@ if (requestTitle) {
 const requestParameters = new URLSearchParams(window.location.search);
 const requestedService = requestParameters.get('service') || 'Request DTR';
 const requestedUnit = requestParameters.get('unit') || Object.entries(unitCatalog).find(([, unit]) => unit.services.includes(requestedService))?.[0] || '';
-const requestFormAvailable = requestedUnit === 'ICT Unit' && Boolean(ictRequestCatalog[requestedService]);
+const isGuidedRoutingRequest = requestedUnit === 'Guided routing' && requestedService === 'Help me find the right office';
+const requestFormAvailable = (enabledRequestUnits.includes(requestedUnit) || isGuidedRoutingRequest)
+  && Boolean(unitCatalog[requestedUnit]?.services.includes(requestedService));
 const ictFields = document.querySelector('#ict-fields');
 if (ictFields && !requestFormAvailable) {
   const card = ictFields.closest('.ict-request-card');
@@ -326,28 +332,28 @@ if (ictFields && !requestFormAvailable) {
   copy.textContent = `We are preparing ${requestedUnit || 'this service'} for online requests.`;
   const link = document.createElement('a');
   link.className = 'primary-action';
-  link.href = 'unit-services.html?unit=ICT%20Unit';
-  link.textContent = 'Browse available ICT services';
+  link.href = `unit-services.html?unit=${encodeURIComponent(enabledRequestUnits[0])}`;
+  link.textContent = 'Browse available services';
   notice.append(heading, copy, link);
   if (form) form.before(notice);
 }
 const ictRequestForm = document.querySelector('#ict-request-form');
 if (ictFields && ictRequestForm && requestFormAvailable) {
   const selectedService = new URLSearchParams(window.location.search).get('service') || 'Request DTR';
-  const selectedIctService = ictRequestCatalog[selectedService] || {
-    intro: 'Send your ICT-related request to the ICT service desk for review.',
-    copy: 'Add the details ICT needs to route and resolve your request.',
-    fields: '<label>What do you need help with?<textarea name="details" rows="4" placeholder="Describe your ICT request."></textarea></label>',
+  const selectedUnitService = ictRequestCatalog[selectedService] || {
+    intro: isGuidedRoutingRequest ? 'Tell us what you need. The ICT service desk will help identify the right office.' : `Send your ${requestedUnit} request to the appropriate service desk for review.`,
+    copy: isGuidedRoutingRequest ? 'Describe what you are trying to do or ask about.' : `Add the details ${requestedUnit} needs to review and respond to your request.`,
+    fields: `<label>${isGuidedRoutingRequest ? 'What do you need help with?' : 'Request details'}<textarea name="details" rows="4" placeholder="${isGuidedRoutingRequest ? 'Describe what you need help with.' : `Describe your ${requestedUnit} request and include any useful reference numbers.`}"></textarea></label>`,
   };
-  const resolvedTitle = ictRequestCatalog[selectedService] ? selectedService : 'ICT service request';
+  const resolvedTitle = selectedService;
   const intro = document.querySelector('#request-service-intro');
   const contextTitle = document.querySelector('#service-context-title');
   const contextCopy = document.querySelector('#service-context-copy');
   if (requestTitle) requestTitle.textContent = resolvedTitle;
-  if (intro) intro.textContent = selectedIctService.intro;
+  if (intro) intro.textContent = selectedUnitService.intro;
   if (contextTitle) contextTitle.textContent = resolvedTitle;
-  if (contextCopy) contextCopy.textContent = selectedIctService.copy;
-  ictFields.innerHTML = selectedIctService.fields;
+  if (contextCopy) contextCopy.textContent = selectedUnitService.copy;
+  ictFields.innerHTML = selectedUnitService.fields;
   const requesterEmailLabel = ictRequestForm.querySelector('#requester-email-label');
   const requesterEmailInput = ictRequestForm.querySelector('input[name="email"]');
   const requesterEmailHelper = document.querySelector('#requester-email-helper');
@@ -436,7 +442,8 @@ if (unitDirectory) {
     const href = new URL(card.href, window.location.href);
     const unitName = href.searchParams.get('unit') || '';
     const status = card.querySelector('b');
-    if (unitName === 'ICT Unit') {
+    if (card.classList.contains('guided-unit')) return;
+    if (enabledRequestUnits.includes(unitName)) {
       if (status) status.textContent = 'Available ↗';
       return;
     }
