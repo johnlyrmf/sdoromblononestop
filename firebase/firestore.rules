@@ -28,10 +28,6 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    function isAnonymousRequester() {
-      return signedIn() && request.auth.token.firebase.sign_in_provider == 'anonymous';
-    }
-
     function validPublicStatus(status) {
       return status in ['submitted', 'in_review', 'in_progress', 'waiting_for_requester', 'account_created', 'ready_for_activation', 'ready_for_release', 'completed', 'declined'];
     }
@@ -58,7 +54,7 @@ service cloud.firestore {
     }
 
     match /requests/{requestId} {
-      allow create: if isAnonymousRequester()
+      allow create: if signedIn()
         && requestId.matches('^[0-9]{9}$')
         && request.resource.data.unitId == 'ICT Unit'
         && request.resource.data.status == 'submitted'
@@ -76,36 +72,58 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Public code lookup returns only this deliberately minimal projection.
-    // Exact reads are allowed; collection listing and client writes are denied.
+    // Public code lookup exposes only the limited tracking projection.
+    // The parent collection cannot be listed; messages live in its updates subcollection.
     match /public_tracking/{trackingCode} {
       allow get: if trackingCode.matches('^[0-9]{9}$');
       allow list: if false;
-      allow create: if isAnonymousRequester()
+      allow create: if signedIn()
         && trackingCode.matches('^[0-9]{9}$')
-        && request.resource.data.keys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['status', 'updatedAt', 'service', 'requesterName', 'requesterEmail'])
         && request.resource.data.status == 'submitted'
         && request.resource.data.updatedAt != null
         && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.requesterUid == request.auth.uid
-        && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.trackingNumber == trackingCode;
+        && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.trackingNumber == trackingCode
+        && request.resource.data.service == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.service
+        && request.resource.data.requesterName == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.requesterName
+        && request.resource.data.requesterEmail == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.requesterEmail;
       allow update: if isICTStaff()
-        && request.resource.data.keys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['status', 'updatedAt', 'service', 'requesterName', 'requesterEmail'])
         && validPublicStatus(request.resource.data.status)
         && request.resource.data.updatedAt != null
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'service', 'requesterName', 'requesterEmail'])
         && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.trackingNumber == trackingCode
-        && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.status == request.resource.data.status;
+        && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.status == request.resource.data.status
+        && request.resource.data.service == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.service
+        && request.resource.data.requesterName == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.requesterName
+        && request.resource.data.requesterEmail == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.requesterEmail;
       allow delete: if isAdmin();
 
       match /updates/{updateId} {
         allow get, list: if trackingCode.matches('^[0-9]{9}$');
-        allow create: if isICTStaff()
-          && request.resource.data.keys().hasOnly(['status', 'message', 'createdAt'])
-          && validPublicStatus(request.resource.data.status)
-          && request.resource.data.message is string
-          && request.resource.data.message.size() <= 1000
-          && request.resource.data.createdAt != null
-          && getAfter(/databases/$(database)/documents/public_tracking/$(trackingCode)).data.status == request.resource.data.status;
+        allow create: if (
+            isICTStaff()
+            && request.resource.data.keys().hasOnly(['status', 'message', 'createdAt', 'senderRole'])
+            && request.resource.data.senderRole == 'ict'
+            && validPublicStatus(request.resource.data.status)
+            && request.resource.data.message is string
+            && request.resource.data.message.size() <= 1000
+            && request.resource.data.createdAt != null
+            && getAfter(/databases/$(database)/documents/public_tracking/$(trackingCode)).data.status == request.resource.data.status
+          ) || (
+            request.resource.data.keys().hasOnly(['status', 'message', 'createdAt', 'senderRole'])
+            && request.resource.data.senderRole == 'requester'
+            && validPublicStatus(request.resource.data.status)
+            && request.resource.data.message is string
+            && request.resource.data.message.size() > 0
+            && request.resource.data.message.size() <= 1000
+            && request.resource.data.createdAt != null
+            && get(/databases/$(database)/documents/public_tracking/$(trackingCode)).data.status == request.resource.data.status
+            && get(/databases/$(database)/documents/requests/$(trackingCode)).data.trackingNumber == trackingCode
+            && getAfter(/databases/$(database)/documents/request_events/$(updateId)).data.requestId == trackingCode
+            && getAfter(/databases/$(database)/documents/request_events/$(updateId)).data.senderRole == 'requester'
+            && getAfter(/databases/$(database)/documents/request_events/$(updateId)).data.message == request.resource.data.message
+          );
         allow update: if false;
         allow delete: if isAdmin();
       }
@@ -130,6 +148,20 @@ service cloud.firestore {
           && request.resource.data.requesterUid == request.auth.uid
           && exists(/databases/$(database)/documents/requests/$(request.resource.data.requestId))
           && get(/databases/$(database)/documents/requests/$(request.resource.data.requestId)).data.requesterUid == request.auth.uid
+        )
+        || (
+          request.resource.data.keys().hasOnly(['requestId', 'status', 'message', 'visibleToRequester', 'senderRole', 'createdAt'])
+          && request.resource.data.requestId.matches('^[0-9]{9}$')
+          && request.resource.data.senderRole == 'requester'
+          && request.resource.data.visibleToRequester == true
+          && request.resource.data.status == get(/databases/$(database)/documents/public_tracking/$(request.resource.data.requestId)).data.status
+          && request.resource.data.message is string
+          && request.resource.data.message.size() > 0
+          && request.resource.data.message.size() <= 1000
+          && request.resource.data.createdAt != null
+          && get(/databases/$(database)/documents/requests/$(request.resource.data.requestId)).data.trackingNumber == request.resource.data.requestId
+          && getAfter(/databases/$(database)/documents/public_tracking/$(request.resource.data.requestId)/updates/$(eventId)).data.senderRole == 'requester'
+          && getAfter(/databases/$(database)/documents/public_tracking/$(request.resource.data.requestId)/updates/$(eventId)).data.message == request.resource.data.message
         );
       allow update, delete: if isAdmin();
     }

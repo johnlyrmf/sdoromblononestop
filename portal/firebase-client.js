@@ -192,6 +192,16 @@ function makeTrackingNumber() {
   return String(100_000_000 + (random[0] % range));
 }
 
+function formatTrackingNumber(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  return /^\d{9}$/.test(digits) ? `SDO-${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}` : String(value || '');
+}
+
+function timestampMillis(value) {
+  const date = value?.toDate ? value.toDate() : (value ? new Date(value) : null);
+  return date && !Number.isNaN(date.getTime()) ? date.getTime() : 0;
+}
+
 async function submitIctRequest() {
   if (!requireFirebase()) return;
   const form = $('#ict-request-form');
@@ -232,9 +242,12 @@ async function submitIctRequest() {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
-    batch.set(doc(db, 'public_tracking', trackingNumber), {
+      batch.set(doc(db, 'public_tracking', trackingNumber), {
       status: 'submitted',
       updatedAt: serverTimestamp(),
+      service,
+      requesterName: values.fullName || '',
+      requesterEmail: values.email || '',
     });
     await batch.commit();
     const minimumLoaderTime = 1450;
@@ -245,7 +258,7 @@ async function submitIctRequest() {
     document.body.classList.remove('modal-open');
     $('#ict-request-form')?.setAttribute('hidden', 'hidden');
     const number = $('#ict-confirmation-number');
-    if (number) number.textContent = trackingNumber;
+    if (number) number.textContent = formatTrackingNumber(trackingNumber);
     setMessage('#ict-submit-message', `Your ${unitId} request was submitted.`, 'success');
     setModalOpen('#ict-submission-success-modal', true);
   } catch (error) {
@@ -340,6 +353,7 @@ let activeIctRecord = null;
 let activeTrackedRequest = null;
 let activeStaffProfile = null;
 let ictQueueRecords = [];
+let latestRequesterReplies = new Map();
 let ictQueueFilter = 'active';
 let ictEmailView = 'active';
 let ictEmailSort = 'newest';
@@ -364,7 +378,45 @@ function renderIctQueue(snapshot) {
   ictQueueRecords = records;
   ictRecords.clear();
   records.forEach((record) => ictRecords.set(record.id, record));
-  renderIctQueueRecords(records);
+  renderIctQueueRecords(recordsWithLatestReplies(records));
+  backfillTrackingIdentity(records);
+}
+
+function recordsWithLatestReplies(records) {
+  return records.map((record) => {
+    const reply = latestRequesterReplies.get(record.id);
+    if (!reply || timestampMillis(reply.createdAt) <= timestampMillis(record.updatedAt)) return record;
+    return { ...record, latestMessage: reply.message, latestMessageBy: 'requester' };
+  });
+}
+
+function renderLatestRequesterReplies(snapshot) {
+  latestRequesterReplies = new Map();
+  snapshot.docs.forEach((item) => {
+    const reply = item.data();
+    if (!reply.requestId) return;
+    const previous = latestRequesterReplies.get(reply.requestId);
+    if (!previous || timestampMillis(reply.createdAt) > timestampMillis(previous.createdAt)) latestRequesterReplies.set(reply.requestId, reply);
+  });
+  renderIctQueueRecords(recordsWithLatestReplies(ictQueueRecords));
+}
+
+async function backfillTrackingIdentity(records) {
+  const candidates = records.filter((record) => /^\d{9}$/.test(record.trackingNumber || '') && (record.requesterName || record.requesterEmail));
+  await Promise.all(candidates.map(async (record) => {
+    const trackingRef = doc(db, 'public_tracking', record.trackingNumber);
+    const trackingSnapshot = await getDoc(trackingRef);
+    if (!trackingSnapshot.exists()) return;
+    const projection = trackingSnapshot.data();
+    if (projection.requesterName === (record.requesterName || '') && projection.requesterEmail === (record.requesterEmail || '') && projection.service === (record.service || 'Service request')) return;
+    const batch = writeBatch(db);
+    batch.update(trackingRef, {
+      service: record.service || 'Service request',
+      requesterName: record.requesterName || '',
+      requesterEmail: record.requesterEmail || '',
+    });
+    await batch.commit();
+  })).catch((error) => setMessage('#ict-dashboard-message', error.message || 'Could not refresh public tracking details.', 'error'));
 }
 
 function renderIctQueueRecords(records) {
@@ -382,7 +434,7 @@ function renderIctQueueRecords(records) {
     const currentStatus = ICT_STATUSES.some(([value]) => value === record.status) ? record.status : 'submitted';
     return `<article class="ict-queue-item ${currentStatus === 'completed' ? 'is-completed' : ''}" data-request-id="${escapeHtml(record.id)}" data-requester-uid="${escapeHtml(record.requesterUid || '')}">
       <div class="ict-queue-summary"><div class="queue-status-line"><span class="queue-status">${escapeHtml(statusLabel(currentStatus))}</span>${record.latestMessageBy === 'requester' ? '<span class="requester-reply-badge"><i></i> New reply</span>' : ''}</div><h3>${escapeHtml(record.service || 'Service request')}</h3><p>${escapeHtml(record.requesterName || record.requesterEmail || 'Anonymous requester')}</p>${record.latestMessage ? `<small class="queue-latest-message">${escapeHtml(record.latestMessage)}</small>` : ''}</div>
-      <div class="queue-meta"><strong>${escapeHtml(record.trackingNumber || record.id)}</strong><small>${escapeHtml(activeStaffProfile?.unitId || 'Assigned unit')}</small><button class="queue-action-button" data-action="open-request" type="button">Take action <span>↗</span></button></div>
+      <div class="queue-meta"><strong>${escapeHtml(formatTrackingNumber(record.trackingNumber || record.id))}</strong><small>${escapeHtml(activeStaffProfile?.unitId || 'Assigned unit')}</small><button class="queue-action-button" data-action="open-request" type="button">Take action <span>↗</span></button></div>
     </article>`;
   }).join('') : `<div class="ict-queue-empty"><span>✓</span><strong>${ictQueueFilter === 'completed' ? 'No completed requests yet' : ictQueueFilter === 'needs_reply' ? 'No new requester replies' : ictQueueFilter === 'declined' ? 'No declined requests' : 'No active requests'}</strong><small>Choose another view to see the rest of the request history.</small></div>`;
 }
@@ -435,7 +487,7 @@ async function loadRequestEvents(requestId, requesterUid = null) {
   const filters = [where('requestId', '==', requestId)];
   if (requesterUid) filters.push(where('requesterUid', '==', requesterUid), where('visibleToRequester', '==', true));
   const snapshot = await getDocs(query(collection(db, 'request_events'), ...filters));
-  return snapshot.docs.map((item) => item.data()).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  return snapshot.docs.map((item) => item.data()).sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt));
 }
 
 async function openIctRequestModal(requestId, button) {
@@ -467,7 +519,7 @@ async function openIctRequestModal(requestId, button) {
   if (actionSupportRow) actionSupportRow.classList.toggle('without-attachment', isCredentialRequest);
   if (title) title.textContent = record.service || 'Service request';
   if (requester) requester.textContent = record.requesterName || record.requesterEmail || 'Anonymous requester';
-  if (tracking) tracking.textContent = record.trackingNumber || record.id;
+  if (tracking) tracking.textContent = formatTrackingNumber(record.trackingNumber || record.id);
   const deleteRequestButton = $('#ict-delete-request');
   const canDeleteRequest = activeStaffProfile?.role === 'admin';
   if (deleteRequestButton) deleteRequestButton.hidden = !canDeleteRequest;
@@ -532,6 +584,7 @@ if (dashboard && isFirebaseConfigured) {
       if (name) name.textContent = profile.displayName || user.displayName || 'Staff member';
       if (email) email.textContent = profile.email || user.email || '';
       onSnapshot(query(collection(db, 'requests'), where('unitId', '==', profileUnit)), renderIctQueue, (error) => setMessage('#ict-dashboard-message', error.message, 'error'));
+      onSnapshot(query(collection(db, 'request_events'), where('senderRole', '==', 'requester')), renderLatestRequesterReplies, (error) => setMessage('#ict-dashboard-message', error.message, 'error'));
     } catch (error) {
       activeStaffProfile = null;
       await signOut(auth).catch(() => {});
@@ -598,7 +651,7 @@ if (ictActionForm) ictActionForm.addEventListener('submit', async (event) => {
   setMessage('#ict-action-form-message', 'Saving update…', 'info');
   try {
     const batch = writeBatch(db);
-    const publicUpdate = { status, message: message || `Request marked ${statusLabel(status).toLowerCase()}.`, createdAt: new Date() };
+    const publicUpdate = { status, message: message || `Request marked ${statusLabel(status).toLowerCase()}.`, senderRole: 'ict', createdAt: new Date() };
     batch.update(doc(db, 'requests', activeIctRecord.id), { status, latestMessage: message, latestMessageBy: 'ict', latestAttachment: attachment, updatedAt: serverTimestamp() });
     batch.set(doc(collection(db, 'request_events')), { requestId: activeIctRecord.id, requesterUid: activeIctRecord.requesterUid, status, message: message || `Request marked ${statusLabel(status).toLowerCase()}.`, visibleToRequester: true, senderRole: 'ict', senderUnit: activeStaffProfile?.unitId || activeStaffProfile?.unit || 'ICT Unit', attachment, createdBy: auth.currentUser.uid, createdAt: serverTimestamp() });
     if (/^\d{9}$/.test(activeIctRecord.trackingNumber || '')) {
@@ -627,7 +680,7 @@ if (deleteRequestButton && deleteConfirmation) deleteRequestButton.addEventListe
     return;
   }
   const tracking = $('#ict-delete-tracking');
-  if (tracking) tracking.textContent = activeIctRecord.trackingNumber || activeIctRecord.id;
+  if (tracking) tracking.textContent = formatTrackingNumber(activeIctRecord.trackingNumber || activeIctRecord.id);
   setMessage('#ict-delete-message', '', 'info');
   setModalOpen('#ict-action-modal', false);
   setModalOpen('#ict-delete-modal', true);
@@ -795,8 +848,8 @@ function formatTimestamp(value) {
 function renderTrackedTimeline(requestRecord, events) {
   renderModalEvents('#request-detail-timeline', requestRecord, events);
   const status = $('#request-detail-status');
-  const latestAdminEvent = events.find((event) => event.senderRole !== 'requester');
-  const statusMessage = latestAdminEvent?.message || events[0]?.message || 'Your request has been received.';
+  const latestIctEvent = events.find((event) => event.senderRole === 'ict');
+  const statusMessage = latestIctEvent?.message || 'Your request has been received.';
   if (status) status.innerHTML = `<span class="queue-status">CURRENT STATUS</span><strong>${escapeHtml(statusLabel(requestRecord.status || 'submitted'))}</strong><small>${escapeHtml(statusMessage || 'Your request has been received.')}</small>`;
 }
 
@@ -817,14 +870,23 @@ async function trackRequest() {
     }
     const requestRecord = { trackingNumber: number, unitId: 'ICT Unit', ...snapshot.data() };
     const updatesSnapshot = await getDocs(collection(db, 'public_tracking', number, 'updates'));
-    const events = updatesSnapshot.docs.map((item) => item.data()).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    const events = updatesSnapshot.docs.map((item) => item.data()).sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt));
     activeTrackedRequest = { ...requestRecord, events };
     const title = $('#request-detail-title');
     const subtitle = $('#request-detail-subtitle');
     const tracking = $('#request-detail-tracking');
-    if (title) title.textContent = 'Your request';
+    const requesterName = $('#requester-identity-name');
+    const requesterEmail = $('#requester-identity-email');
+    const requesterAvatar = $('#requester-identity-avatar');
+    if (title) title.textContent = requestRecord.service || 'Service request';
     if (subtitle) subtitle.textContent = requestRecord.unitId || 'Assigned unit';
-    if (tracking) tracking.textContent = number;
+    if (tracking) tracking.textContent = formatTrackingNumber(number);
+    if (requesterName) requesterName.textContent = requestRecord.requesterName || 'Requester';
+    if (requesterEmail) requesterEmail.textContent = requestRecord.requesterEmail || 'No email provided';
+    if (requesterAvatar) requesterAvatar.textContent = (requestRecord.requesterName || 'R').trim().charAt(0).toUpperCase();
+    const replyInput = $('#requester-reply-message');
+    if (replyInput) replyInput.value = '';
+    setMessage('#requester-reply-message-status', '', 'info');
     renderTrackedTimeline(requestRecord, events);
     setModalOpen('#request-detail-modal', true);
     setMessage('#tracker-message', `${statusLabel(requestRecord.status)} · Last updated ${formatTimestamp(requestRecord.updatedAt)}.`, 'success');
@@ -839,7 +901,10 @@ const trackerButton = $('.tracking-form .primary-action');
 if (trackerButton) trackerButton.addEventListener('click', trackRequest);
 const trackerInput = $('#tracking-number');
 if (trackerInput) {
-  trackerInput.addEventListener('input', () => { trackerInput.value = trackerInput.value.replace(/\D/g, '').slice(0, 9); });
+  trackerInput.addEventListener('input', () => {
+    const digits = trackerInput.value.replace(/\D/g, '').slice(0, 9);
+    trackerInput.value = digits.match(/.{1,3}/g)?.join('-') || '';
+  });
   trackerInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); trackRequest(); } });
 }
 
@@ -881,6 +946,45 @@ if (passwordResetForm) passwordResetForm.addEventListener('submit', async (event
       'auth/operation-not-allowed': 'Email/password sign-in is not enabled in Firebase Authentication.',
     };
     setMessage('#password-reset-message', messages[error.code] || error.message || 'Could not send the reset email.', 'error');
+  } finally {
+    if (button) { button.disabled = false; button.classList.remove('is-loading'); }
+  }
+});
+
+const requesterReplyForm = $('#requester-reply-form');
+if (requesterReplyForm) requesterReplyForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!activeTrackedRequest || !db) return;
+  const replyInput = $('#requester-reply-message');
+  const message = replyInput?.value.trim() || '';
+  if (!message) {
+    setMessage('#requester-reply-message-status', 'Write a message before sending your reply.', 'error');
+    return;
+  }
+  const button = $('#requester-reply-submit');
+  if (button) { button.disabled = true; button.classList.add('is-loading'); }
+  setMessage('#requester-reply-message-status', 'Sending your reply…', 'info');
+  try {
+    const code = activeTrackedRequest.trackingNumber;
+    const status = activeTrackedRequest.status || 'submitted';
+    const createdAt = serverTimestamp();
+    const eventRef = doc(collection(db, 'request_events'));
+    const updateRef = doc(db, 'public_tracking', code, 'updates', eventRef.id);
+    const batch = writeBatch(db);
+    batch.set(eventRef, { requestId: code, status, message, visibleToRequester: true, senderRole: 'requester', createdAt });
+    batch.set(updateRef, { status, message, senderRole: 'requester', createdAt });
+    await batch.commit();
+    replyInput.value = '';
+    setMessage('#requester-reply-message-status', 'Your reply was sent to the ICT Unit.', 'success');
+    try {
+      const updatesSnapshot = await getDocs(collection(db, 'public_tracking', code, 'updates'));
+      activeTrackedRequest.events = updatesSnapshot.docs.map((item) => item.data()).sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt));
+      renderTrackedTimeline(activeTrackedRequest, activeTrackedRequest.events);
+    } catch {
+      // The reply is saved; keep the success message if the timeline refresh is delayed.
+    }
+  } catch (error) {
+    setMessage('#requester-reply-message-status', error.message || 'Could not send your reply. Please try again.', 'error');
   } finally {
     if (button) { button.disabled = false; button.classList.remove('is-loading'); }
   }

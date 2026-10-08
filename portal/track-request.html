@@ -28,15 +28,15 @@
           <p class="eyebrow">Request timeline</p>
           <h1 id="track-title">Track your<br /><em>request.</em></h1>
           <p class="service-description">Stay close to every update. Enter the 9-digit code you received after submitting your request.</p>
-          <div class="track-assurance"><span class="assurance-dot"></span><span>Your request history stays private and secure.</span></div>
+          <div class="track-assurance"><span class="assurance-dot"></span><span>Only people with your tracking code can open this request.</span></div>
         </section>
         <section class="tracking-card" aria-label="Request tracking form">
           <div class="card-kicker"><span class="card-symbol">#</span><span>ONE TRACKING NUMBER</span></div>
           <h2>Where is your request now?</h2>
-          <p>Your 9-digit code opens the current status and updates. No sign-in or email is needed.</p>
+          <p>Your code opens the status and messages and lets you reply from any device. No sign-in is needed.</p>
           <form class="tracking-form">
             <label for="tracking-number">9-digit tracking code</label>
-            <div class="tracking-input-wrap"><span aria-hidden="true">#</span><input id="tracking-number" type="text" inputmode="numeric" pattern="[0-9]{9}" maxlength="9" placeholder="123456789" autocomplete="one-time-code" /></div>
+            <div class="tracking-input-wrap"><span aria-hidden="true">SDO-</span><input id="tracking-number" type="text" inputmode="numeric" pattern="[0-9]{3}-[0-9]{3}-[0-9]{3}" maxlength="11" placeholder="000-000-000" autocomplete="one-time-code" /></div>
             <button class="primary-action" type="button">View request <span>↗</span></button>
           </form>
           <div class="timeline-preview" id="timeline-preview" aria-label="Request timeline">
@@ -51,11 +51,33 @@
     </main>
     <div class="modal-backdrop" id="request-detail-modal" hidden>
       <section class="modal-card request-detail-modal-card" role="dialog" aria-modal="true" aria-labelledby="request-detail-title">
-        <div class="modal-scroll-content">
-          <header class="modal-header"><div><p class="form-kicker">REQUEST STATUS</p><div class="modal-request-heading"><div><h2 id="request-detail-title">Your request</h2><p id="request-detail-subtitle">ICT Unit</p></div><strong id="request-detail-tracking">000000000</strong></div></div><button class="modal-close" type="button" data-modal-close aria-label="Close request status">×</button></header>
+        <header class="modal-header request-detail-header">
+          <div class="request-detail-header-content">
+            <p class="form-kicker">REQUEST STATUS</p>
+            <div class="request-detail-heading-row">
+              <div><h2 id="request-detail-title">Your request</h2><p id="request-detail-subtitle">ICT Unit</p></div>
+              <strong class="request-detail-code" id="request-detail-tracking">SDO-000-000-000</strong>
+            </div>
+            <div class="requester-identity">
+              <span class="requester-identity-avatar" id="requester-identity-avatar" aria-hidden="true">R</span>
+              <span><strong id="requester-identity-name">Requester name</strong><small id="requester-identity-email">requester@email.com</small></span>
+            </div>
+          </div>
+          <button class="modal-close" type="button" data-modal-close aria-label="Close request status">×</button>
+        </header>
+        <div class="modal-scroll-content request-detail-scroll-content" tabindex="0" aria-label="Request status history and reply form">
         <div class="request-status-banner" id="request-detail-status"></div>
         <div class="modal-event-list" id="request-detail-timeline"></div>
+        <form id="requester-reply-form" class="requester-reply-composer">
+          <label for="requester-reply-message">Reply to ICT</label>
+          <textarea id="requester-reply-message" rows="4" maxlength="1000" placeholder="Write a message or provide the information ICT requested…" required></textarea>
+          <small>Your message will be shared with the ICT Unit handling this request.</small>
+        </form>
         </div>
+        <footer class="request-detail-footer">
+          <p id="requester-reply-message-status" class="requester-reply-message-status" role="status" hidden></p>
+          <button class="modal-primary-action" id="requester-reply-submit" form="requester-reply-form" type="submit">Send reply <span>↗</span></button>
+        </footer>
       </section>
     </div>
     <script src="app.js"></script>

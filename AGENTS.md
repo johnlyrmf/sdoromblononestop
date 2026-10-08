@@ -17,9 +17,9 @@ SDO Romblon OneStop is the Schools Division Office of Romblon's service portal. 
 ## Security and tracking
 
 - Firestore rules, not UI hiding, enforce access to requests and queues. Never let one unit read another unit's queue.
-- New request tracking uses a random 9-digit bearer code. Public lookup reads only `public_tracking/{code}` and its requester-visible `updates` subcollection; never expose request documents, requester identity, details, attachments, or private events through this path. Exact code reads are public and have no server-side rate limit, so keep the projection minimal.
-- Request submission creates an anonymous Firebase session in the background; no visible requester sign-in is required. Tracking works across devices from the 9-digit code.
-- The portal does not use Cloud Functions. Staff accounts are provisioned manually in Firebase Authentication and Firestore; keep `firebase/firebase.json` configured for Firestore only.
+- New request tracking uses a random 9-digit bearer code formatted `SDO-000-000-000`. Public lookup reads only `public_tracking/{code}` and its requester-visible `updates` subcollection, which may contain service, requester name/email, status, and visible messages. Never expose request details, attachments, or private events through this path. Exact code reads and replies are public bearer-code actions with no server-side rate limit, so keep the projection minimal.
+- Request submission uses the current Firebase session or creates an anonymous session in the background; no visible requester sign-in is required. Tracking works across devices from the 9-digit code.
+- Requester replies are written directly to Firestore under code-scoped rules. The portal does not use Cloud Functions. Staff accounts are provisioned manually in Firebase Authentication and Firestore; keep `firebase/firebase.json` configured for Firestore only.
 - Do not print, copy, commit, or quote credentials or secret values.
 
 ## Repository and deployment

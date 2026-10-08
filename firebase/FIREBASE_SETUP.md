@@ -26,10 +26,10 @@ Create a Cloud Firestore database, then publish `firebase/firestore.rules` and t
 
 The rules allow:
 
-- Anonymous request creation for the ICT Unit only
+- Request creation for the ICT Unit using the current Firebase session or an anonymous session created in the background
 - Active ICT staff to read the ICT queue
 - Requesters to read their own requests
-- Anyone with a 9-digit tracking code to read its minimal public tracking projection (status and requester-visible updates only); listing tracking records and reading request documents remain denied to the public
+- Anyone with a formatted 9-digit tracking code to read the limited tracking projection (service, requester name/email, status, and requester-visible updates); listing tracking records and reading request documents remain denied to the public
 - Administrators to manage user profiles
 
 ## 4. Provision the first ICT staff account
@@ -60,9 +60,9 @@ Google sign-in will be rejected if this approved profile does not exist. The bro
 4. Submit an ICT request from `request-form.html?service=Request%20DTR`.
 5. Confirm that the request appears in the ICT queue.
 6. In the ICT queue, choose a status, add an optional message, and select **Save update**. The request document and a requester-visible timeline event are written together.
-7. Open `track-request.html` on any device, enter the 9-digit code, and select **View request**. The page reads only `public_tracking/{code}` and its `updates` subcollection, which contain the current status and requester-visible update summaries. This lookup does not read the private request document or call a Cloud Function.
+7. Open `track-request.html` on any device, enter the formatted code (for example, `SDO-123-456-789`), and select **View request**. The page reads only `public_tracking/{code}` and its `updates` subcollection, which contain the service, requester name/email, current status, and requester-visible updates. A requester reply is written directly to Firestore under rules that require the matching tracking code; no Cloud Function is called.
 
-The 9-digit code is a bearer code: anyone who has it can view that request's status and requester-visible updates. Firestore rules allow exact document reads only and deny collection listing. Because lookup goes directly to Firestore and has no server-side rate limiter, keep the public projection limited to those fields; do not add requester names, emails, request details, attachments, or private events.
+The 9-digit code is a bearer code: anyone who has it can view the service, requester name/email, status, and requester-visible updates, and can send a reply as the requester. Firestore rules allow exact document reads only and deny collection listing. Because lookup and replies go directly to Firestore without a server-side rate limiter, never add request details, attachments, or private events to this public projection.
 
 The Google provider and modular web SDK pattern follow Firebase’s official web setup and Authentication guidance.
 
