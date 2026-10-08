@@ -47,6 +47,17 @@
     .name-list-clear:focus-visible { outline:3px solid rgba(47,112,180,.25); outline-offset:2px; }
     .name-list-clear[hidden] { display:none; }
     .source-card,.settings-card { min-width:0; padding:19px; border:1px solid #dfe7f1; border-radius:15px; background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(247,250,254,.94)); box-shadow:0 9px 24px rgba(28,53,87,.045); }
+    .source-card { position:relative; padding-top:43px; transition:border-color .2s,box-shadow .2s,background .2s; }
+    .source-card .card-heading > div:first-child { padding-left:28px; }
+    .source-health { position:absolute; top:17px; left:19px; width:20px; height:20px; display:grid; place-items:center; border:1px solid #d5dce5; border-radius:50%; color:#68778a; background:#f2f4f6; font-size:12px; font-weight:800; line-height:1; }
+    .source-card[data-health="ready"] { border-color:#d0ded2; box-shadow:0 9px 24px rgba(48,103,65,.055); }
+    .source-card[data-health="ready"] .source-health { border-color:#d1e2d4; color:#3d7651; background:#edf5ee; }
+    .source-card[data-health="missing"],.source-card[data-health="error"] { border-color:#e4cecb; box-shadow:0 9px 24px rgba(142,61,53,.045); }
+    .source-card[data-health="missing"] .source-health,.source-card[data-health="error"] .source-health { border-color:#ead2cf; color:#a2534c; background:#fbf0ee; }
+    .source-card[data-health="pending"] { border-color:#e6d9b7; }
+    .source-card[data-health="pending"] .source-health { border-color:#eadfca; color:#97712d; background:#faf4e8; }
+    .source-card[data-health="optional"] .source-health { border-color:#e2e3df; color:#7b8490; background:#f3f4f2; font-size:11px; }
+    .source-card[data-health="error"] { background:linear-gradient(145deg,#fffdfb,#faf4f1); }
     .card-heading,.section-head { display:flex; align-items:center; justify-content:space-between; gap:14px; }
     .card-heading h3,.section-head h3 { margin:1px 0 0; color:#17365b; font-size:15px; letter-spacing:-.1px; }
     .mini-eyebrow { color:#74849a; font-size:10px; letter-spacing:1.25px; font-weight:750; text-transform:uppercase; }
@@ -230,7 +241,8 @@
       <div class="step" data-step="3"><b>Download completed DTRs</b>Creates one workbook per office, with each employee DTR on its own sheet.</div>
       </div>
       <div class="source-grid">
-        <div class="source-card">
+        <div class="source-card" id="attendanceSourceCard" data-health="missing">
+          <span class="source-health" id="attendanceSourceHealth" role="img" aria-label="Attendance log required">!</span>
           <div class="card-heading"><div><span class="mini-eyebrow">STEP 01 · SOURCE</span><h3>Attendance log</h3></div><span class="tag">EXCEL · .XLSX</span></div>
           <p class="card-hint">Select one monthly ZKTime 5.0 export to prepare the DTRs.</p>
           <input id="logFile" class="file-input-hidden" type="file" accept=".xlsx" aria-label="Choose ZKTime Excel attendance log">
@@ -241,7 +253,8 @@
           </label>
           <div class="name-list-actions"><div class="file-meta" id="logFileName" aria-live="polite">No attendance log selected</div><button class="name-list-clear" id="clearAttendanceLog" type="button" hidden>Remove log</button></div>
         </div>
-        <div class="source-card guard-upload-card">
+        <div class="source-card guard-upload-card" id="guardSourceCard" data-health="optional">
+          <span class="source-health" id="guardSourceHealth" role="img" aria-label="Optional guards log not uploaded">–</span>
           <div class="card-heading"><div><span class="mini-eyebrow">OPTIONAL · SPECIAL SHIFT</span><h3>Guards punch log</h3></div><span class="tag">.XLS · .XLSX</span></div>
           <p class="card-hint">Upload the guards’ punch-level export when needed. The Guards roster and separate C/In · C/Out rules are used. Leave empty to omit guards.</p>
           <input id="guardLogFile" class="file-input-hidden" type="file" accept=".xls,.xlsx" aria-label="Choose an optional guards punch log">
@@ -249,7 +262,8 @@
           <div class="name-list-actions"><div class="file-meta" id="guardFileName" aria-live="polite">No guards log selected</div><button class="name-list-clear" id="clearGuardLog" type="button" hidden>Remove log</button></div>
           <span id="guardStatus" class="guard-status" role="status" aria-live="polite">Optional: guards will be omitted unless a guards log is uploaded.</span>
         </div>
-        <div class="source-card name-list-card">
+        <div class="source-card name-list-card" id="rosterSourceCard" data-health="missing">
+          <span class="source-health" id="rosterSourceHealth" role="img" aria-label="Official roster unavailable">!</span>
           <div class="card-heading"><div><span class="mini-eyebrow">OFFICIAL ROSTER · PRELOADED</span><h3>Official employee names</h3></div><span class="tag">PRELOADED LIST</span></div>
           <p class="card-hint">Approved employee names and office assignments load automatically. You can upload a replacement roster for a local override in this browser.</p>
           <input id="officialNamesFile" class="file-input-hidden" type="file" accept=".xlsx" aria-label="Upload the official employee names workbook">
@@ -260,7 +274,8 @@
           </div>
           <p class="name-list-note">Names are matched against the preloaded list where possible. Unmatched names and guards continue through the existing review rules.</p>
         </div>
-        <div class="source-card template-card">
+        <div class="source-card template-card" id="templateSourceCard" data-health="missing">
+          <span class="source-health" id="templateSourceHealth" role="img" aria-label="DTR template unavailable">!</span>
           <div>
             <div class="card-heading"><div><span class="mini-eyebrow">OFFICIAL FORM</span><h3>Agency DTR template</h3></div><span class="tag">PRELOADED</span></div>
             <div class="template-lockup" style="margin-top:17px">
@@ -327,6 +342,15 @@
 <script>
 (() => {
   const $ = id => document.getElementById(id);
+  function setSourceHealth(cardId,state,label) {
+    const card=$(cardId),badge=card?.querySelector('.source-health');
+    if(!card||!badge)return;
+    const marks={ready:'✓',pending:'…',optional:'–',missing:'!',error:'!'};
+    card.dataset.health=state;
+    badge.textContent=marks[state]||'!';
+    badge.setAttribute('aria-label',label);
+    badge.title=label;
+  }
   let parsedLog = null;
   let processed = null;
   let activePeriod = null;
@@ -484,6 +508,8 @@
     return usableLogOffice(logDepartment)||"Unassigned";
   }
   updateOfficialNamesStatus();
+  setSourceHealth('rosterSourceCard',officialNames.length?'ready':'missing',officialNames.length?'Official roster ready':'Official roster unavailable');
+  setSourceHealth('templateSourceCard',window.DTR_TEMPLATE_B64?'ready':'missing',window.DTR_TEMPLATE_B64?'Preloaded DTR template ready':'Preloaded DTR template unavailable');
   function assignPunches(records) {
     const start=timeToMin($('startTime').value), lunchStart=timeToMin($('lunchStart').value), lunchEnd=timeToMin($('lunchEnd').value), pmArrivalEnd=timeToMin($('pmArrivalEnd').value), leaveStart=timeToMin($('departureStart').value);
     if(!(start<lunchStart&&lunchStart<=lunchEnd&&lunchEnd<pmArrivalEnd&&pmArrivalEnd<leaveStart)) throw new Error('Time windows must be in order: AM arrival, AM departure, PM arrival, then PM departure.');
@@ -823,6 +849,7 @@
     $('logFileName').textContent=chosen?chosen.name:'No attendance log selected';
     $('logFileName').classList.toggle('selected',!!chosen);
     $('clearAttendanceLog').hidden=!chosen;
+    setSourceHealth('attendanceSourceCard',chosen?'pending':'missing',chosen?'Checking attendance log':'Attendance log required');
     processed=null; $('processBtn').disabled=!e.target.files.length; $('excelBtn').disabled=true; $('csvBtn').disabled=true; $('summary').style.display='none'; $('exceptionsPanel').style.display='none';
     if(!e.target.files.length){parsedLog=null;activePeriod='';setStatus('Choose a ZKTime .xlsx file to begin.');return;}
     setLoading(true,'Reading the ZKTime log and checking its columns…'); setStatus('Reading the Excel log…');
@@ -831,35 +858,38 @@
       const grid=await parseXlsx(e.target.files[0]); parsedLog=parseData(grid);
       const periods=[...new Set(parsedLog.filter(r=>!r.bad).map(r=>r.date.slice(0,7)))].sort();
       if(!periods.length) throw new Error('No valid attendance dates were found.');
+      setSourceHealth('attendanceSourceCard','ready','Attendance log ready');
       $('period').value=periods[periods.length-1]; activePeriod=$('period').value; if(guardLog)refreshGuardUploadStatus();
       setStatus(`${parsedLog.length} log rows read. Confirm the month, then click Start Process.`, 'success');
-    } catch(err) { parsedLog=null; $('processBtn').disabled=true; setStatus(err.message||String(err),'error'); }
+    } catch(err) { parsedLog=null; $('processBtn').disabled=true; setSourceHealth('attendanceSourceCard','error','Attendance log could not be read'); setStatus(err.message||String(err),'error'); }
     finally { setLoading(false); }
   });
   $('clearAttendanceLog').addEventListener('click',()=>{logInput.value='';logInput.dispatchEvent(new Event('change',{bubbles:true}));});
   $("officialNamesFile").addEventListener("change",async e=>{
     const file=e.target.files[0]; if(!file)return;
+    setSourceHealth('rosterSourceCard','pending','Checking replacement roster');
     setLoading(true,"Reading the official employee names workbook…"); setStatus("Checking the official name list…");
     try {
       await paintFrame(); const grid=await parseXlsx(file); const employees=extractOfficialEmployees(grid);
       if(!employees.length) throw new Error("No employee names were found. Names should appear below the office headings in the first worksheet.");
       officialEmployees=employees; officialNames=employees.map(employee=>employee.name); officialNamesPreloaded=false;
       try { localStorage.setItem("dtrOfficialNames.v1",JSON.stringify(officialEmployees)); } catch { throw new Error("The list was read, but this browser could not save it locally. Check browser storage settings and try again."); }
-      updateOfficialNamesStatus(); e.target.value=""; if(guardLog)refreshGuardUploadStatus();
+      updateOfficialNamesStatus(); setSourceHealth('rosterSourceCard','ready','Replacement roster ready'); e.target.value=""; if(guardLog)refreshGuardUploadStatus();
       processed=null; $('excelBtn').disabled=true; $('csvBtn').disabled=true; $('summary').style.display='none'; $('exceptionsPanel').style.display='none';
       setStatus(`${officialNames.length} official employee names saved in this browser. Biometric log employees will remain included. Click Start Process again to apply the list.`,`success`);
-    } catch(err) { setStatus(err.message||String(err),"error"); }
+    } catch(err) { setSourceHealth('rosterSourceCard','error','Replacement roster could not be loaded'); setStatus(err.message||String(err),"error"); }
     finally { setLoading(false); }
   });
   $("clearOfficialNames").addEventListener("click",()=>{
     try { localStorage.removeItem("dtrOfficialNames.v1"); } catch {}
     officialEmployees=preloadedOfficialEmployees.map(employee=>({name:employee.name,offices:Array.isArray(employee.offices)?employee.offices:[]}));
     officialNames=officialEmployees.map(employee=>employee.name); officialNamesPreloaded=officialEmployees.length>0||officialNames.length>0;
-    updateOfficialNamesStatus(); $("officialNamesFile").value=""; if(guardLog)refreshGuardUploadStatus();
+    updateOfficialNamesStatus(); setSourceHealth('rosterSourceCard',officialNamesPreloaded?'ready':'missing',officialNamesPreloaded?'Preloaded roster ready':'Official roster unavailable'); $("officialNamesFile").value=""; if(guardLog)refreshGuardUploadStatus();
     setStatus(officialNamesPreloaded?"Using the preloaded official name list.":"Saved official name list removed. Names will be kept as recorded in the biometric log.");
   });
   $('templateFile').addEventListener('change',async e=>{
     const file=e.target.files[0]; if(!file)return;
+    setSourceHealth('templateSourceCard','pending','Checking replacement template');
     setLoading(true,'Checking the replacement DTR template…'); setStatus('Checking the selected DTR template…');
     try {
       await paintFrame();
@@ -870,8 +900,9 @@
       $('templateStatusText').textContent='REPLACEMENT ACTIVE';
       $('templateFormat').textContent='Compatible layout';
       $('templateReset').hidden=false;
+      setSourceHealth('templateSourceCard','ready','Replacement template ready');
       setStatus('Replacement DTR template loaded successfully.','success');
-    } catch(err) { setStatus(err.message||String(err),'error'); }
+    } catch(err) { setSourceHealth('templateSourceCard','error','Replacement template could not be loaded'); setStatus(err.message||String(err),'error'); }
     finally { setLoading(false); }
   });
   $('templateReset').addEventListener('click',()=>{
@@ -880,6 +911,7 @@
     $('templateStatusText').textContent='PRELOADED TEMPLATE';
     $('templateFormat').textContent='Legal · Portrait';
     $('templateReset').hidden=true;
+    setSourceHealth('templateSourceCard',window.DTR_TEMPLATE_B64?'ready':'missing',window.DTR_TEMPLATE_B64?'Preloaded DTR template ready':'Preloaded DTR template unavailable');
     setStatus('Using the preloaded agency DTR template.');
   });
   $('processBtn').addEventListener('click',async()=>{
@@ -941,7 +973,8 @@
     if(!guardLog)return;
     const period=$('period').value, monthRecords=guardLog.records.filter(record=>record.date.startsWith(period));
     const matches=getGuardRosterMatches(monthRecords); guardLog.skippedNames=matches.skipped;
-    if(!monthRecords.length) { setGuardStatus('No guard punches found for the selected month. Guards will be omitted.', 'error'); return; }
+    if(!monthRecords.length) { setSourceHealth('guardSourceCard','error','No guard punches found for the selected month'); setGuardStatus('No guard punches found for the selected month. Guards will be omitted.', 'error'); return; }
+    setSourceHealth('guardSourceCard','ready','Guards log ready');
     setGuardStatus(`Guards log ready for ${period}.`,matches.names.length?'success':'');
   }
   const guardDrop=$('guardDropZone');
@@ -951,6 +984,7 @@
   guardInput.addEventListener('change',async event=>{
     const file=event.target.files?.[0];guardLog=null;processed=null;$('excelBtn').disabled=true;$('csvBtn').disabled=true;$('summary').style.display='none';$('exceptionsPanel').style.display='none';
     $('guardFileName').textContent=file?.name||'No guards log selected';$('guardFileName').classList.toggle('selected',!!file);$('clearGuardLog').hidden=!file;
+    setSourceHealth('guardSourceCard',file?'pending':'optional',file?'Checking guards log':'Optional guards log not uploaded');
     if(!file){setGuardStatus('Optional: guards will be omitted unless a guards log is uploaded.');if(parsedLog)setStatus('Guards will be omitted from the DTR ZIP. Click Start Process to continue.');return;}
     try {
       setLoading(true,'Reading the optional guards punch log…');await paintFrame();
@@ -962,7 +996,7 @@
       guardLog=parsed;refreshGuardUploadStatus();
       processed=null;$('processBtn').disabled=!parsedLog;
       if(parsedLog)setStatus('Guards log is ready. Click Start Process to review both logs, then download the combined DTR ZIP.','success');
-    } catch(error){guardLog=null;setGuardStatus(error.message||String(error),'error');}
+    } catch(error){guardLog=null;setSourceHealth('guardSourceCard','error','Guards log could not be read');setGuardStatus(error.message||String(error),'error');}
     finally{setLoading(false);}
   });
   $('clearGuardLog').addEventListener('click',()=>{guardInput.value='';guardInput.dispatchEvent(new Event('change',{bubbles:true}));});
