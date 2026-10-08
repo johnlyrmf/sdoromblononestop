@@ -48,16 +48,17 @@
     .name-list-clear[hidden] { display:none; }
     .source-card,.settings-card { min-width:0; padding:19px; border:1px solid #dfe7f1; border-radius:15px; background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(247,250,254,.94)); box-shadow:0 9px 24px rgba(28,53,87,.045); }
     .source-card { position:relative; padding-top:43px; transition:border-color .2s,box-shadow .2s,background .2s; }
-    .source-card .card-heading > div:first-child { padding-left:28px; }
-    .source-health { position:absolute; top:17px; left:19px; width:20px; height:20px; display:grid; place-items:center; border:1px solid #d5dce5; border-radius:50%; color:#68778a; background:#f2f4f6; font-size:12px; font-weight:800; line-height:1; }
-    .source-card[data-health="ready"] { border-color:#d0ded2; box-shadow:0 9px 24px rgba(48,103,65,.055); }
-    .source-card[data-health="ready"] .source-health { border-color:#d1e2d4; color:#3d7651; background:#edf5ee; }
-    .source-card[data-health="missing"],.source-card[data-health="error"] { border-color:#e4cecb; box-shadow:0 9px 24px rgba(142,61,53,.045); }
-    .source-card[data-health="missing"] .source-health,.source-card[data-health="error"] .source-health { border-color:#ead2cf; color:#a2534c; background:#fbf0ee; }
-    .source-card[data-health="pending"] { border-color:#e6d9b7; }
-    .source-card[data-health="pending"] .source-health { border-color:#eadfca; color:#97712d; background:#faf4e8; }
-    .source-card[data-health="optional"] .source-health { border-color:#e2e3df; color:#7b8490; background:#f3f4f2; font-size:11px; }
-    .source-card[data-health="error"] { background:linear-gradient(145deg,#fffdfb,#faf4f1); }
+    .source-card .card-heading > div:first-child { padding-left:34px; }
+    .source-health { position:absolute; top:15px; left:17px; width:27px; height:27px; display:grid; place-items:center; border:1.5px solid #cbd3de; border-radius:50%; color:#64748b; background:#eef1f5; box-shadow:0 2px 6px rgba(23,42,66,.08); font-size:15px; font-weight:800; line-height:1; transition:color .2s,background .2s,border-color .2s,box-shadow .2s,transform .2s; }
+    .source-card[data-health="ready"] { border:1.5px solid #a9c9b0; box-shadow:0 9px 24px rgba(48,103,65,.075),inset 0 0 0 1px rgba(89,145,99,.06); }
+    .source-card[data-health="ready"] .source-health { border-color:#9fc4a8; color:#287244; background:#e2f0e5; box-shadow:0 2px 8px rgba(53,119,70,.18); }
+    .source-card[data-health="missing"],.source-card[data-health="error"] { border:1.5px solid #d7a7a2; box-shadow:0 9px 24px rgba(142,61,53,.065),inset 0 0 0 1px rgba(176,83,73,.045); }
+    .source-card[data-health="missing"] .source-health,.source-card[data-health="error"] .source-health { border-color:#d6a19c; color:#a83e37; background:#f8e5e2; box-shadow:0 2px 8px rgba(157,65,57,.16); }
+    .source-card[data-health="pending"] { border:1.5px solid #d8c28f; }
+    .source-card[data-health="pending"] .source-health { border-color:#d4bd84; color:#87651f; background:#f8efd9; box-shadow:0 2px 7px rgba(150,112,36,.13); }
+    .source-card[data-health="optional"] .source-health { border-color:#d7d9d5; color:#717b88; background:#eceeeb; font-size:13px; box-shadow:none; }
+    .source-card[data-health="error"] { background:linear-gradient(145deg,#fffdfa,#faf1ef); }
+    .source-card[data-health="ready"] .source-health { transform:scale(1.03); }
     .card-heading,.section-head { display:flex; align-items:center; justify-content:space-between; gap:14px; }
     .card-heading h3,.section-head h3 { margin:1px 0 0; color:#17365b; font-size:15px; letter-spacing:-.1px; }
     .mini-eyebrow { color:#74849a; font-size:10px; letter-spacing:1.25px; font-weight:750; text-transform:uppercase; }
@@ -345,9 +346,9 @@
   function setSourceHealth(cardId,state,label) {
     const card=$(cardId),badge=card?.querySelector('.source-health');
     if(!card||!badge)return;
-    const marks={ready:'✓',pending:'…',optional:'–',missing:'!',error:'!'};
+    const marks={ready:'✓',pending:'…',optional:'–',missing:'×',error:'×'};
     card.dataset.health=state;
-    badge.textContent=marks[state]||'!';
+    badge.textContent=marks[state]||'×';
     badge.setAttribute('aria-label',label);
     badge.title=label;
   }
