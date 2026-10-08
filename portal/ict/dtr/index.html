@@ -39,16 +39,12 @@
     .guard-status { display:block; min-height:20px; margin-top:10px; color:#64758c; font-size:12px; }
     .guard-status.error { color:#a12a35; font-weight:650; }
     .guard-status.success { color:#226745; font-weight:650; }
-    .guard-results { display:none; margin-top:16px; padding:14px 16px; border:1px solid #dce7f2; border-radius:12px; background:linear-gradient(120deg,#f7faff,#fff); }
-    .guard-results.show { display:block; }
-    .guard-results h4 { margin:0 0 8px; color:#17365b; font-size:12px; }
-    .guard-name-list { display:flex; flex-wrap:wrap; gap:7px; margin:0; padding:0; list-style:none; }
-    .guard-name-list li { padding:5px 9px; border:1px solid #dce5ef; border-radius:999px; background:#fff; color:#315274; font-size:11px; }
-    .guard-review { margin-top:10px; color:#8b5b18; font-size:11px; line-height:1.5; white-space:pre-line; }
-    .guard-review:empty { display:none; }
     .name-list-note { margin:12px 0 0; color:#74849a; font-size:11px; line-height:1.5; }
     .name-list-actions { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; }
-    .name-list-clear { padding:5px 8px; border:1px solid #d9e3ef; border-radius:8px; color:#49617d; background:#f7f9fc; font-size:10px; font-weight:650; cursor:pointer; }
+    .name-list-actions .file-meta { margin-top:0; }
+    .name-list-clear { min-height:34px; padding:7px 11px; border:1px solid #d6dfeb; border-radius:9px; color:#405875; background:#f4f6f8; font-size:11px; font-weight:700; cursor:pointer; box-shadow:none; transition:background .18s,border-color .18s,color .18s,transform .18s; }
+    .name-list-clear:hover:not(:disabled) { transform:translateY(-1px); color:#17365b; border-color:#9fb1c8; background:#eaf0f6; box-shadow:none; filter:none; }
+    .name-list-clear:focus-visible { outline:3px solid rgba(47,112,180,.25); outline-offset:2px; }
     .name-list-clear[hidden] { display:none; }
     .source-card,.settings-card { min-width:0; padding:19px; border:1px solid #dfe7f1; border-radius:15px; background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(247,250,254,.94)); box-shadow:0 9px 24px rgba(28,53,87,.045); }
     .card-heading,.section-head { display:flex; align-items:center; justify-content:space-between; gap:14px; }
@@ -96,6 +92,11 @@
     .template-file-meta::before { content:""; width:6px; height:6px; flex:0 0 auto; border-radius:50%; background:#39a36f; box-shadow:0 0 0 3px rgba(57,163,111,.12); }
     .template-reset { grid-column:1/-1; justify-self:start; min-height:30px; padding:5px 9px; border:1px solid #d9e3ef; border-radius:8px; color:#49617d; background:#f7f9fc; font-size:10px; box-shadow:none; }
     .template-reset[hidden] { display:none; }
+    .roster-upload { margin-top:16px; }
+    .roster-upload-copy { color:#344965; }
+    .roster-upload-copy small { max-width:360px; }
+    .roster-upload .name-list-actions { grid-column:1/-1; margin-top:0; }
+    #officialNamesFile:focus-visible ~ .roster-upload .template-browse { outline:3px solid rgba(47,112,180,.3); outline-offset:3px; }
     .settings-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.12fr); gap:14px; margin-top:14px; }
     .section-head { margin-bottom:14px; }
     .section-mark { width:27px; height:27px; flex:0 0 auto; display:grid; place-items:center; border-radius:8px; background:#edf3fa; color:#275b91; font-size:11px; font-weight:750; }
@@ -190,6 +191,9 @@
     .step b,.card-heading h3,.section-head h3,.template-copy h3 { color:#193252; }
     #processBtn { background:linear-gradient(120deg,#e4c77d,#cfaa55); color:#182944; box-shadow:0 8px 20px rgba(155,121,49,.18); }
     button:not(.secondary):not(#processBtn) { background:linear-gradient(120deg,#203f68,#173153); }
+    button:not(.secondary):not(#processBtn).name-list-clear { color:#405875; border-color:#d6dfeb; background:#f4f6f8; }
+    button:not(.secondary):not(#processBtn).name-list-clear:hover:not(:disabled) { color:#17365b; border-color:#9fb1c8; background:#eaf0f6; }
+    button:disabled:not(#processBtn) { opacity:1; color:#66758a; border-color:#dce2e9; background:#e9edf2; box-shadow:none; cursor:not-allowed; filter:none; }
     .site-splash { background:radial-gradient(ellipse at 80% 15%,rgba(62,91,138,.3),transparent 35%),linear-gradient(135deg,#07142d,#102b52 78%,#142f56); }
     @media(max-width:600px) { .portal-toolbar { min-height:62px; padding:8px 14px; } .portal-toolbar-brand img { width:32px;height:32px; } .portal-toolbar-tag { display:none; } main { margin:14px auto; } main > header { border-radius:18px; } main > .panel { border-radius:16px; } }
   </style>
@@ -235,7 +239,7 @@
             <span class="drop-copy"><strong>Drop your log here</strong><small>or browse to choose an Excel file</small></span>
             <span class="browse-button">Browse files</span>
           </label>
-          <div class="file-meta" id="logFileName" aria-live="polite">No attendance log selected</div>
+          <div class="name-list-actions"><div class="file-meta" id="logFileName" aria-live="polite">No attendance log selected</div><button class="name-list-clear" id="clearAttendanceLog" type="button" hidden>Remove log</button></div>
         </div>
         <div class="source-card guard-upload-card">
           <div class="card-heading"><div><span class="mini-eyebrow">OPTIONAL · SPECIAL SHIFT</span><h3>Guards punch log</h3></div><span class="tag">.XLS · .XLSX</span></div>
@@ -244,18 +248,16 @@
           <label class="drop-zone" id="guardDropZone" for="guardLogFile"><span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></span><span class="drop-copy"><strong>Drop the guards log here</strong><small>or browse for an Excel .xls or .xlsx file</small></span><span class="browse-button">Browse files</span></label>
           <div class="name-list-actions"><div class="file-meta" id="guardFileName" aria-live="polite">No guards log selected</div><button class="name-list-clear" id="clearGuardLog" type="button" hidden>Remove log</button></div>
           <span id="guardStatus" class="guard-status" role="status" aria-live="polite">Optional: guards will be omitted unless a guards log is uploaded.</span>
-          <div class="guard-results" id="guardResults"><h4>Guards matched to the official list</h4><ul class="guard-name-list" id="guardNames"></ul><div class="guard-review" id="guardReview"></div></div>
         </div>
         <div class="source-card name-list-card">
           <div class="card-heading"><div><span class="mini-eyebrow">OFFICIAL ROSTER · PRELOADED</span><h3>Official employee names</h3></div><span class="tag">PRELOADED LIST</span></div>
           <p class="card-hint">Approved employee names and office assignments load automatically. You can upload a replacement roster for a local override in this browser.</p>
           <input id="officialNamesFile" class="file-input-hidden" type="file" accept=".xlsx" aria-label="Upload the official employee names workbook">
-          <label class="drop-zone" for="officialNamesFile">
-            <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></span>
-            <span class="drop-copy"><strong>Choose a roster for this browser</strong><small>Excel .xlsx · local override only</small></span>
-            <span class="browse-button">Browse files</span>
-          </label>
-          <div class="name-list-actions"><div class="file-meta" id="officialNamesStatus" aria-live="polite">No official list saved in this browser</div><button class="name-list-clear" id="clearOfficialNames" type="button" hidden>Remove saved list</button></div>
+          <div class="template-upload roster-upload">
+            <div class="template-upload-copy roster-upload-copy">Need a different roster?<small>Choose an approved .xlsx list. It is saved only in this browser.</small></div>
+            <label class="template-browse" for="officialNamesFile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>Browse roster</label>
+            <div class="name-list-actions"><div class="file-meta" id="officialNamesStatus" aria-live="polite">No official list saved in this browser</div><button class="name-list-clear" id="clearOfficialNames" type="button" hidden>Reset to preloaded list</button></div>
+          </div>
           <p class="name-list-note">Names are matched against the preloaded list where possible. Unmatched names and guards continue through the existing review rules.</p>
         </div>
         <div class="source-card template-card">
@@ -820,8 +822,9 @@
     const chosen=e.target.files[0];
     $('logFileName').textContent=chosen?chosen.name:'No attendance log selected';
     $('logFileName').classList.toggle('selected',!!chosen);
+    $('clearAttendanceLog').hidden=!chosen;
     processed=null; $('processBtn').disabled=!e.target.files.length; $('excelBtn').disabled=true; $('csvBtn').disabled=true; $('summary').style.display='none'; $('exceptionsPanel').style.display='none';
-    if(!e.target.files.length){setStatus('Choose a ZKTime .xlsx file to begin.');return;}
+    if(!e.target.files.length){parsedLog=null;activePeriod='';setStatus('Choose a ZKTime .xlsx file to begin.');return;}
     setLoading(true,'Reading the ZKTime log and checking its columns…'); setStatus('Reading the Excel log…');
     try {
       await paintFrame();
@@ -833,6 +836,7 @@
     } catch(err) { parsedLog=null; $('processBtn').disabled=true; setStatus(err.message||String(err),'error'); }
     finally { setLoading(false); }
   });
+  $('clearAttendanceLog').addEventListener('click',()=>{logInput.value='';logInput.dispatchEvent(new Event('change',{bubbles:true}));});
   $("officialNamesFile").addEventListener("change",async e=>{
     const file=e.target.files[0]; if(!file)return;
     setLoading(true,"Reading the official employee names workbook…"); setStatus("Checking the official name list…");
@@ -923,7 +927,7 @@
   });
   const guardInput=$('guardLogFile');
   function setGuardStatus(message,type=''){const status=$('guardStatus');status.textContent=message;status.className='guard-status '+type;}
-  function showGuardRosterNames(records) {
+  function getGuardRosterMatches(records) {
     const included=new Map(),skipped=new Set();
     for(const record of records) {
       const official=matchOfficialEmployee(record.name);
@@ -931,18 +935,14 @@
       else skipped.add(record.name.toLocaleUpperCase('en-PH'));
     }
     const names=[...included.keys()].sort((a,b)=>a.localeCompare(b));
-    $('guardNames').replaceChildren(...names.map(name=>{const item=document.createElement('li');item.textContent=name;return item;}));
-    $('guardResults').classList.toggle('show',!!records.length);
     return {names,skipped:[...skipped].sort()};
   }
   function refreshGuardUploadStatus() {
     if(!guardLog)return;
     const period=$('period').value, monthRecords=guardLog.records.filter(record=>record.date.startsWith(period));
-    const matches=showGuardRosterNames(monthRecords); guardLog.skippedNames=matches.skipped;
-    if(!monthRecords.length) { $('guardReview').textContent='No guard punches were found for the selected DTR month.'; setGuardStatus('No punches found for this month. No guards will be included.', 'error'); return; }
-    const skippedNote=matches.skipped.length?` ${matches.skipped.length} unmatched name(s) are excluded and will appear in the review list.`:'';
-    $('guardReview').textContent=matches.skipped.length?`Not in the official Guards list: ${matches.skipped.slice(0,8).join(', ')}${matches.skipped.length>8?`, and ${matches.skipped.length-8} more`:''}`:'All names shown are matched to the official Guards list.';
-    setGuardStatus(`${matches.names.length} official guard name(s) matched for ${period}.${skippedNote}`,matches.names.length?'success':'error');
+    const matches=getGuardRosterMatches(monthRecords); guardLog.skippedNames=matches.skipped;
+    if(!monthRecords.length) { setGuardStatus('No guard punches found for the selected month. Guards will be omitted.', 'error'); return; }
+    setGuardStatus(`Guards log ready for ${period}.`,matches.names.length?'success':'');
   }
   const guardDrop=$('guardDropZone');
   for(const type of ['dragenter','dragover'])guardDrop.addEventListener(type,event=>{event.preventDefault();guardDrop.classList.add('dragging');});
@@ -950,7 +950,7 @@
   guardDrop.addEventListener('drop',event=>{const file=event.dataTransfer?.files?.[0];if(!file)return;const transfer=new DataTransfer();transfer.items.add(file);guardInput.files=transfer.files;guardInput.dispatchEvent(new Event('change',{bubbles:true}));});
   guardInput.addEventListener('change',async event=>{
     const file=event.target.files?.[0];guardLog=null;processed=null;$('excelBtn').disabled=true;$('csvBtn').disabled=true;$('summary').style.display='none';$('exceptionsPanel').style.display='none';
-    $('guardFileName').textContent=file?.name||'No guards log selected';$('guardFileName').classList.toggle('selected',!!file);$('clearGuardLog').hidden=!file;$('guardResults').classList.remove('show');
+    $('guardFileName').textContent=file?.name||'No guards log selected';$('guardFileName').classList.toggle('selected',!!file);$('clearGuardLog').hidden=!file;
     if(!file){setGuardStatus('Optional: guards will be omitted unless a guards log is uploaded.');if(parsedLog)setStatus('Guards will be omitted from the DTR ZIP. Click Start Process to continue.');return;}
     try {
       setLoading(true,'Reading the optional guards punch log…');await paintFrame();
