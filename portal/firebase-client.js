@@ -239,10 +239,11 @@ async function submitIctRequest() {
     window.hidePageLoader?.();
     $('#ict-review-modal')?.setAttribute('hidden', 'hidden');
     document.body.classList.remove('modal-open');
-    $('#ict-confirmation')?.removeAttribute('hidden');
+    $('#ict-request-form')?.setAttribute('hidden', 'hidden');
     const number = $('#ict-confirmation-number');
     if (number) number.textContent = trackingNumber;
     setMessage('#ict-submit-message', `Your ${unitId} request was submitted.`, 'success');
+    setModalOpen('#ict-submission-success-modal', true);
   } catch (error) {
     window.hidePageLoader?.();
     setMessage('#ict-submit-message', error.message || `The ${unitId} request could not be submitted.`, 'error');

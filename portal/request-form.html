@@ -35,7 +35,6 @@
             <div class="ict-form-section"><div class="ict-section-heading"><span>03</span><strong>Supporting file <em>optional</em></strong></div><label class="ict-upload"><input id="ict-attachment" name="attachment" type="file" /><span class="upload-mark">↥</span><span><strong>Attach a file</strong><small>Screenshot, memo, or reference document · PDF, JPG, PNG</small></span><b>Browse</b></label></div>
             <div class="ict-form-actions"><p><span class="secure-dot"></span>Your request can be reviewed before it is submitted.</p><button class="primary-action ict-review-button" type="button">Review request <span>↗</span></button></div>
           </form>
-          <div class="ict-confirmation" id="ict-confirmation" hidden><span class="confirmation-mark">✓</span><p class="form-kicker">REQUEST SUBMITTED</p><h3>ICT has your request.</h3><p>Keep this private tracking code to view and reply to your request.</p><strong id="ict-confirmation-number">SDO-2026-00000</strong><a class="primary-action" href="track-request.html">Track this request <span>↗</span></a></div>
           <p class="firebase-message" id="ict-submit-message" role="status" hidden></p>
         </section>
       </div>
@@ -48,6 +47,17 @@
           <div class="ict-review-summary" id="ict-review-summary"></div>
           <div class="ict-review-modal-actions"><button class="ict-back-edit" type="button" data-review-close>← Edit details</button><button class="primary-action ict-submit-preview" type="button">Submit ICT request <span>↗</span></button></div>
         </div>
+      </section>
+    </div>
+    <div class="modal-backdrop confirmation-backdrop" id="ict-submission-success-modal" hidden>
+      <section class="modal-card compact-confirmation-card submission-success-card" role="dialog" aria-modal="true" aria-labelledby="ict-submission-success-title">
+        <button class="modal-close" type="button" data-modal-close aria-label="Close confirmation">×</button>
+        <span class="confirmation-mark" aria-hidden="true">✓</span>
+        <p class="form-kicker">REQUEST SUBMITTED</p>
+        <h2 id="ict-submission-success-title">ICT has your request.</h2>
+        <p>Keep this private tracking code to view and reply to your request.</p>
+        <strong id="ict-confirmation-number">SDO-2026-00000</strong>
+        <a class="primary-action" href="track-request.html">Track this request <span>↗</span></a>
       </section>
     </div>
     <script src="app.js"></script>
