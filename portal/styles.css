@@ -313,8 +313,8 @@ body.auth-page-shell { background:var(--navy-950); }
 
 /* Focused request form layout: keep the service context and navigation inside
    one centered card so every request service shares the same calm workflow. */
-.ict-request-shell { overflow-x:hidden; }
-.ict-request-page { align-items:center; display:flex; justify-content:center; min-height:0; overflow:hidden; padding:clamp(28px,5vw,64px) clamp(16px,4vw,52px); }
+.ict-request-shell { display:flex; flex-direction:column; min-height:100svh; overflow-x:hidden; }
+.ict-request-page { align-items:center; display:flex; flex:1 0 auto; justify-content:center; min-height:0; overflow:hidden; padding:clamp(28px,5vw,64px) clamp(16px,4vw,52px); }
 .ict-request-layout { display:block; margin:0 auto; max-width:820px; width:100%; }
 .ict-request-intro { display:none; }
 .ict-request-card { margin:0 auto; max-width:820px; padding:clamp(24px,4vw,42px); }

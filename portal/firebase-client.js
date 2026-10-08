@@ -901,6 +901,16 @@ const trackerButton = $('.tracking-form .primary-action');
 if (trackerButton) trackerButton.addEventListener('click', trackRequest);
 const trackerInput = $('#tracking-number');
 if (trackerInput) {
+  trackerInput.addEventListener('paste', (event) => {
+    const pastedText = event.clipboardData?.getData('text');
+    if (!pastedText) return;
+    const digits = pastedText.replace(/\D/g, '').slice(0, 9);
+    if (!digits) return;
+    event.preventDefault();
+    trackerInput.value = digits.match(/.{1,3}/g)?.join('-') || '';
+    trackerInput.dispatchEvent(new Event('input', { bubbles: true }));
+    trackerInput.setSelectionRange(trackerInput.value.length, trackerInput.value.length);
+  });
   trackerInput.addEventListener('input', () => {
     const digits = trackerInput.value.replace(/\D/g, '').slice(0, 9);
     trackerInput.value = digits.match(/.{1,3}/g)?.join('-') || '';
