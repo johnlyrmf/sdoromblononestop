@@ -16,7 +16,7 @@ Enable these providers for the prototype:
 
 - Google
 - Email/password
-- Anonymous (used only to let a public requester submit an ICT request before an account is required)
+- Anonymous (used in the background to submit an ICT request; requesters do not see a sign-in prompt)
 
 Add the local development host to Authentication > Settings > Authorized domains. Use a local web server instead of opening the HTML files directly with `file://`.
 
@@ -29,8 +29,7 @@ The rules allow:
 - Anonymous request creation for the ICT Unit only
 - Active ICT staff to read the ICT queue
 - Requesters to read their own requests
-- Requesters to read only requester-visible progress events for their own requests
-- Requesters to send a reply event only on their own request
+- Anyone with a 9-digit tracking code to read its minimal public tracking projection (status and requester-visible updates only); listing tracking records and reading request documents remain denied to the public
 - Administrators to manage user profiles
 
 ## 4. Provision the first ICT staff account
@@ -61,20 +60,14 @@ Google sign-in will be rejected if this approved profile does not exist. The bro
 4. Submit an ICT request from `request-form.html?service=Request%20DTR`.
 5. Confirm that the request appears in the ICT queue.
 6. In the ICT queue, choose a status, add an optional message, and select **Save update**. The request document and a requester-visible timeline event are written together.
-7. In the same browser session that submitted the request, open `track-request.html`, enter its tracking number, and select **View request**. The current status and ICT timeline will load from Firestore.
+7. Open `track-request.html` on any device, enter the 9-digit code, and select **View request**. The page reads only `public_tracking/{code}` and its `updates` subcollection, which contain the current status and requester-visible update summaries. This lookup does not read the private request document or call a Cloud Function.
 
-The anonymous requester identity is intentionally retained in the browser that created the request. This keeps tracking private without exposing a public “anyone with a tracking number” query. Cross-device tracking can be added later with an email or one-time-code verification flow.
+The 9-digit code is a bearer code: anyone who has it can view that request's status and requester-visible updates. Firestore rules allow exact document reads only and deny collection listing. Because lookup goes directly to Firestore and has no server-side rate limiter, keep the public projection limited to those fields; do not add requester names, emails, request details, attachments, or private events.
 
 The Google provider and modular web SDK pattern follow Firebase’s official web setup and Authentication guidance.
 
-## 6. Create staff accounts from the ICT dashboard
+## 6. Provision staff accounts without Cloud Functions
 
-The ICT administrator can select **Create unit account** and enter a staff member’s name, official `@deped.gov.ph` email, and assigned office. The callable Cloud Function creates the Firebase Authentication user and active `unit_staff` profile, then emails a one-time password setup link. ICT never sees or stores the staff member’s password.
+Create the staff member in Firebase Authentication, then add the active profile document described above at `users/{AUTH_USER_UID}`. Send the staff member the normal Firebase password setup or reset email. The portal does not create accounts through Cloud Functions, so request submission and tracking do not require Cloud Functions or a Blaze plan.
 
-This uses the existing Gmail OAuth secrets configured for `sendCredentialEmail`. Make sure Email/Password is enabled in Firebase Authentication and both `GMAIL_OAUTH_CLIENT_JSON` and `GMAIL_REFRESH_TOKEN` are configured in Secret Manager. From the `firebase/` directory, deploy the new function with:
-
-```sh
-firebase deploy --only functions:createUnitStaffAccount
-```
-
-**Unit request queues remain ICT-only in the current Firestore rules.** A created Budget, Accounting, or other unit account can establish its identity, but it cannot yet open the matching request queue. Enabling each account to read and update requests and the timeline assigned to its unit requires an additional Firestore authorization change.
+**Unit request queues remain ICT-only in the current Firestore rules.** Other unit accounts can establish their identity, but they cannot open another unit's request queue until that unit is explicitly enabled in the rules and product UI.

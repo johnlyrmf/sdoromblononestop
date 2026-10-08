@@ -27,16 +27,16 @@
         <section class="track-intro" aria-labelledby="track-title">
           <p class="eyebrow">Request timeline</p>
           <h1 id="track-title">Track your<br /><em>request.</em></h1>
-          <p class="service-description">Stay close to every update. Enter the tracking number you received after submitting your request.</p>
+          <p class="service-description">Stay close to every update. Enter the 9-digit code you received after submitting your request.</p>
           <div class="track-assurance"><span class="assurance-dot"></span><span>Your request history stays private and secure.</span></div>
         </section>
         <section class="tracking-card" aria-label="Request tracking form">
           <div class="card-kicker"><span class="card-symbol">#</span><span>ONE TRACKING NUMBER</span></div>
           <h2>Where is your request now?</h2>
-          <p>Your tracking number is your private access code. No email is needed.</p>
+          <p>Your 9-digit code opens the current status and updates. No sign-in or email is needed.</p>
           <form class="tracking-form">
-            <label for="tracking-number">Tracking number</label>
-            <div class="tracking-input-wrap"><span aria-hidden="true">SDO</span><input id="tracking-number" type="text" placeholder="2026-ABCD-1234-EF56-7890-ABCD-1234" autocomplete="off" /></div>
+            <label for="tracking-number">9-digit tracking code</label>
+            <div class="tracking-input-wrap"><span aria-hidden="true">#</span><input id="tracking-number" type="text" inputmode="numeric" pattern="[0-9]{9}" maxlength="9" placeholder="123456789" autocomplete="one-time-code" /></div>
             <button class="primary-action" type="button">View request <span>↗</span></button>
           </form>
           <div class="timeline-preview" id="timeline-preview" aria-label="Request timeline">
@@ -52,15 +52,9 @@
     <div class="modal-backdrop" id="request-detail-modal" hidden>
       <section class="modal-card request-detail-modal-card" role="dialog" aria-modal="true" aria-labelledby="request-detail-title">
         <div class="modal-scroll-content">
-        <header class="modal-header"><div><p class="form-kicker">REQUEST DETAILS</p><div class="modal-request-heading"><div><h2 id="request-detail-title">Your request</h2><p id="request-detail-subtitle">ICT Unit</p></div><strong id="request-detail-tracking">SDO-0000-00000</strong></div></div><button class="modal-close" type="button" data-modal-close aria-label="Close request details">×</button></header>
+          <header class="modal-header"><div><p class="form-kicker">REQUEST STATUS</p><div class="modal-request-heading"><div><h2 id="request-detail-title">Your request</h2><p id="request-detail-subtitle">ICT Unit</p></div><strong id="request-detail-tracking">000000000</strong></div></div><button class="modal-close" type="button" data-modal-close aria-label="Close request status">×</button></header>
         <div class="request-status-banner" id="request-detail-status"></div>
         <div class="modal-event-list" id="request-detail-timeline"></div>
-        <form id="requester-reply-form" class="modal-action-form requester-reply-form">
-          <label>Reply to the assigned unit<textarea id="requester-reply-message" rows="3" placeholder="Add information or ask a follow-up question"></textarea></label>
-          <label class="modal-upload">Attach a document <input id="requester-reply-attachment" type="file" /><small>Attach supporting information if the assigned unit requested it.</small></label>
-          <p class="modal-form-message" id="requester-reply-message-status" role="status" hidden></p>
-          <button class="modal-primary-action" type="submit">Send reply <span>↗</span></button>
-        </form>
         </div>
       </section>
     </div>

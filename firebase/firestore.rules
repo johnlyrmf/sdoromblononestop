@@ -32,6 +32,10 @@ service cloud.firestore {
       return signedIn() && request.auth.token.firebase.sign_in_provider == 'anonymous';
     }
 
+    function validPublicStatus(status) {
+      return status in ['submitted', 'in_review', 'in_progress', 'waiting_for_requester', 'account_created', 'ready_for_activation', 'ready_for_release', 'completed', 'declined'];
+    }
+
     match /users/{userId} {
       allow read: if (
           activeProfile() && (request.auth.uid == userId || isAdmin())
@@ -55,10 +59,11 @@ service cloud.firestore {
 
     match /requests/{requestId} {
       allow create: if isAnonymousRequester()
+        && requestId.matches('^[0-9]{9}$')
         && request.resource.data.unitId == 'ICT Unit'
         && request.resource.data.status == 'submitted'
         && request.resource.data.requesterUid == request.auth.uid
-        && request.resource.data.trackingNumber != null
+        && request.resource.data.trackingNumber == requestId
         && request.resource.data['service'] != null
         && request.resource.data.createdAt != null;
 
@@ -69,6 +74,41 @@ service cloud.firestore {
         && request.resource.data.unitId == resource.data.unitId;
 
       allow delete: if isAdmin();
+    }
+
+    // Public code lookup returns only this deliberately minimal projection.
+    // Exact reads are allowed; collection listing and client writes are denied.
+    match /public_tracking/{trackingCode} {
+      allow get: if trackingCode.matches('^[0-9]{9}$');
+      allow list: if false;
+      allow create: if isAnonymousRequester()
+        && trackingCode.matches('^[0-9]{9}$')
+        && request.resource.data.keys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.status == 'submitted'
+        && request.resource.data.updatedAt != null
+        && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.requesterUid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.trackingNumber == trackingCode;
+      allow update: if isICTStaff()
+        && request.resource.data.keys().hasOnly(['status', 'updatedAt'])
+        && validPublicStatus(request.resource.data.status)
+        && request.resource.data.updatedAt != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.trackingNumber == trackingCode
+        && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.status == request.resource.data.status;
+      allow delete: if isAdmin();
+
+      match /updates/{updateId} {
+        allow get, list: if trackingCode.matches('^[0-9]{9}$');
+        allow create: if isICTStaff()
+          && request.resource.data.keys().hasOnly(['status', 'message', 'createdAt'])
+          && validPublicStatus(request.resource.data.status)
+          && request.resource.data.message is string
+          && request.resource.data.message.size() <= 1000
+          && request.resource.data.createdAt != null
+          && getAfter(/databases/$(database)/documents/public_tracking/$(trackingCode)).data.status == request.resource.data.status;
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
     }
 
     match /request_events/{eventId} {

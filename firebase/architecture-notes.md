@@ -4,7 +4,7 @@
 
 - Firebase Authentication for employees, requesters, and unit staff
 - Cloud Firestore for units, services, requests, messages, status history, releases, and audit logs
-- Cloud Functions or a private backend for all privileged actions
+- Firestore Security Rules for client access; this project does not deploy Cloud Functions
 - An SDO-owned Google Workspace Shared Drive for PDFs and attachments
 
 ## Important boundary
