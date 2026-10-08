@@ -37,6 +37,52 @@ const functions = app ? getFunctions(app, 'asia-southeast1') : null;
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
+const rememberStaffStorageKey = 'onestop-remember-staff';
+const rememberStaffCheckbox = $('#remember-staff');
+if (rememberStaffCheckbox) {
+  try {
+    rememberStaffCheckbox.checked = localStorage.getItem(rememberStaffStorageKey) === 'true';
+  } catch {
+    // Browser storage can be unavailable in private or restricted contexts.
+  }
+  rememberStaffCheckbox.addEventListener('change', () => {
+    try {
+      localStorage.setItem(rememberStaffStorageKey, String(rememberStaffCheckbox.checked));
+    } catch {
+      // Authentication persistence still follows the checkbox for this sign-in.
+    }
+  });
+}
+
+function setStaffSignInPersistence() {
+  return setPersistence(auth, rememberStaffCheckbox?.checked ? browserLocalPersistence : browserSessionPersistence);
+}
+
+function renderAuthNavigation(user) {
+  document.querySelectorAll('.nav-sign-in').forEach((link) => {
+    link.innerHTML = user ? 'Sign out <span>↗</span>' : 'Sign in <span>→</span>';
+    link.href = user ? '#sign-out' : 'sign-in.html';
+    link.setAttribute('aria-label', user ? 'Sign out of OneStop' : 'Sign in to OneStop');
+    link.dataset.authState = user ? 'signed-in' : 'signed-out';
+    link.removeAttribute('aria-disabled');
+  });
+}
+
+document.addEventListener('click', async (event) => {
+  const link = event.target.closest('.nav-sign-in');
+  if (!link || !auth?.currentUser) return;
+  event.preventDefault();
+  link.setAttribute('aria-disabled', 'true');
+  try {
+    await signOut(auth);
+  } catch (error) {
+    console.error('Could not sign out of OneStop.', error);
+    link.removeAttribute('aria-disabled');
+  }
+});
+
+if (auth) onAuthStateChanged(auth, renderAuthNavigation);
+
 function setMessage(selector, message, kind = 'info') {
   const element = $(selector);
   if (!element) return;
@@ -109,7 +155,7 @@ async function finishStaffSignIn(user) {
 async function signInWithGoogleAccount() {
   if (!requireFirebase()) return;
   try {
-    await setPersistence(auth, $('#remember-staff')?.checked ? browserLocalPersistence : browserSessionPersistence);
+    await setStaffSignInPersistence();
     const result = await signInWithPopup(auth, googleProvider);
     await finishStaffSignIn(result.user);
   } catch (error) {
@@ -127,7 +173,7 @@ async function signInWithStaffCredentials() {
     return;
   }
   try {
-    await setPersistence(auth, $('#remember-staff')?.checked ? browserLocalPersistence : browserSessionPersistence);
+    await setStaffSignInPersistence();
     const result = await signInWithEmailAndPassword(auth, email, password);
     await finishStaffSignIn(result.user);
   } catch (error) {
@@ -464,6 +510,8 @@ if (dashboard && isFirebaseConfigured) {
       if (profileUnit.toLowerCase() !== 'ict unit' && profile.role !== 'admin') throw new Error('This unit is not yet enabled for queue access.');
       if (!profileUnit) throw new Error('This account is not assigned to an SDO unit.');
       activeStaffProfile = profile;
+      const dtrToolCard = $('#ict-dtr-tool');
+      if (dtrToolCard) dtrToolCard.hidden = profileUnit.toLowerCase() !== 'ict unit' && profile.role !== 'admin';
       const createUnitAccountButton = $('#open-unit-account-modal');
       if (createUnitAccountButton) createUnitAccountButton.hidden = !(profile.role === 'admin' && profileUnit.toLowerCase() === 'ict unit');
       const resetStaffButton = document.querySelector('[data-open-password-reset]');
@@ -916,6 +964,3 @@ document.querySelectorAll('[data-modal-close]').forEach((button) => button.addEv
 document.querySelectorAll('.modal-backdrop').forEach((modal) => modal.addEventListener('click', (event) => { if (event.target === modal) setModalOpen(`#${modal.id}`, false); }));
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') document.querySelectorAll('.modal-backdrop:not([hidden])').forEach((modal) => setModalOpen(`#${modal.id}`, false)); });
 
-document.querySelectorAll('#staff-sign-out, #header-staff-sign-out').forEach((signOutButton) => {
-  if (auth) signOutButton.addEventListener('click', async (event) => { event.preventDefault(); await signOut(auth); window.location.href = 'sign-in.html'; });
-});

@@ -125,10 +125,10 @@ function enablePageTransitions() {
 enablePageTransitions();
 
 function addAgencyFooter() {
-  if (document.body.classList.contains('home-page') || document.querySelector('.agency-footer')) return;
+  if (document.querySelector('.agency-footer')) return;
   const footer = document.createElement('footer');
   footer.className = 'agency-footer';
-  footer.innerHTML = '<div class="footer-brand"><span class="footer-sdo-logo logo-mask"><img src="../assets/logos/deped-romblon.png" alt="SDO Romblon seal" /></span><span><strong>SDO Romblon OneStop</strong><small>Schools Division Office of Romblon</small></span></div><p>One secure place for requests, updates, and released documents.</p><span class="footer-deped-logo logo-mask"><img src="../assets/logos/kagawaran-ng-edukasyon.png" alt="Kagawaran ng Edukasyon" /></span>';
+  footer.innerHTML = '<div class="footer-brand"><span class="footer-sdo-logo logo-mask"><img src="../assets/logos/deped-romblon.png" alt="SDO Romblon seal" /></span><span><strong>SDO Romblon OneStop</strong><small>Schools Division Office of Romblon</small></span></div><p>One secure place for requests, updates, and released documents.</p><span class="footer-credit">Developed by: John Lyr Falcunaya PDO I</span><span class="footer-deped-logo logo-mask"><img src="../assets/logos/kagawaran-ng-edukasyon.png" alt="Kagawaran ng Edukasyon" /></span>';
   document.body.appendChild(footer);
 }
 

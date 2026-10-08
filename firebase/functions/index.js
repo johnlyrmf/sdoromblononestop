@@ -70,7 +70,7 @@ function safeTrackingEvent(event) {
   };
 }
 
-exports.lookupTrackedRequest = onCall({ region: 'asia-southeast1', enforceAppCheck: false }, async (request) => {
+exports.lookupTrackedRequest = onCall({ region: 'asia-southeast1', enforceAppCheck: false, cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Please try again.');
   await consumeTrackingRateLimit(request);
   const { requestDoc, record } = await findTrackedRequest({ ...(request.data || {}), requesterUid: request.auth.uid });
@@ -97,7 +97,7 @@ exports.lookupTrackedRequest = onCall({ region: 'asia-southeast1', enforceAppChe
   };
 });
 
-exports.replyToTrackedRequest = onCall({ region: 'asia-southeast1', enforceAppCheck: false }, async (request) => {
+exports.replyToTrackedRequest = onCall({ region: 'asia-southeast1', enforceAppCheck: false, cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Please try again.');
   await consumeTrackingRateLimit(request);
   const data = request.data || {};

@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="/assets/icons/deped-app-icon-192.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#07142d">
+  <title>DTR Generator · ICT Workspace · Romblon OneStop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme:light; --navy:#0b1f3a; --blue:#1558a6; --gold:#e9b949; --ink:#17263b; --muted:#67768c; --line:#dce4ef; --glass:rgba(255,255,255,.86); --red:#b4232d; --green:#16794b; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); font:15px/1.5 "Segoe UI",Arial,sans-serif; background:radial-gradient(ellipse at 10% 0%,#dce9fb 0,transparent 38%),radial-gradient(ellipse at 100% 12%,#e7ddc0 0,transparent 30%),linear-gradient(145deg,#f5f8fc,#eaf0f7 54%,#f5f7fa); }
+    main { max-width:1120px; margin:34px auto; padding:0 20px 50px; }
+    header { position:relative; overflow:hidden; color:white; padding:24px 30px; border:1px solid rgba(255,255,255,.18); border-radius:24px 24px 7px 7px; background:linear-gradient(116deg,#081a34 0%,#123c71 62%,#16599d 100%); box-shadow:0 22px 55px rgba(13,39,75,.2); }
+    header::before { content:""; position:absolute; width:390px; height:390px; right:-95px; top:-240px; border:1px solid rgba(255,255,255,.13); border-radius:50%; box-shadow:0 0 0 25px rgba(255,255,255,.025),0 0 0 52px rgba(255,255,255,.025); }
+    .brand-lockup { position:relative; z-index:1; display:flex; align-items:center; gap:19px; }
+    .brand-copy { flex:1; }
+    .brand-copy h1 { margin:2px 0 3px; font-size:clamp(23px,3vw,32px); line-height:1.15; letter-spacing:-.5px; font-weight:700; }
+    .brand-copy p { margin:0; color:#d9e7f8; font-size:14px; }
+    .eyebrow { color:#f3ca68!important; font-size:10px!important; letter-spacing:1.8px; text-transform:uppercase; font-weight:700; }
+    .brand-logo { width:76px; height:76px; padding:4px; flex:0 0 auto; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,.96); border:2px solid rgba(233,185,73,.82); box-shadow:0 8px 20px rgba(0,0,0,.24),inset 0 0 0 3px rgba(13,43,78,.06); }
+    .brand-logo img { display:block; width:100%; height:100%; object-fit:contain; border-radius:50%; }
+    .privacy-pill { position:relative; z-index:1; display:inline-flex; align-items:center; gap:7px; margin-top:16px; padding:6px 10px; border:1px solid rgba(255,255,255,.2); border-radius:999px; color:#edf5ff; background:rgba(255,255,255,.09); font-size:11px; letter-spacing:.35px; }
+    .privacy-dot { width:7px; height:7px; border-radius:50%; background:#70dda2; box-shadow:0 0 10px #70dda2; }
+    .panel { position:relative; padding:25px 30px; background:var(--glass); border:1px solid rgba(255,255,255,.86); border-top:1px solid rgba(218,228,240,.85); box-shadow:0 16px 46px rgba(28,53,87,.09); backdrop-filter:blur(16px); }
+    .panel:last-child { border-radius:7px 7px 24px 24px; }
+    h2 { color:var(--navy); margin:0 0 17px; font-size:19px; letter-spacing:-.2px; }
+    .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:22px; }
+    .step { position:relative; min-height:83px; padding:14px 15px 13px 48px; border:1px solid #e1e8f2; border-radius:12px; background:linear-gradient(145deg,rgba(255,255,255,.95),rgba(242,247,253,.86)); color:#65738a; font-size:13px; box-shadow:0 5px 15px rgba(30,59,95,.035); }
+    .step::before { content:attr(data-step); position:absolute; left:14px; top:15px; width:24px; height:24px; display:grid; place-items:center; color:white; border-radius:50%; background:linear-gradient(145deg,#2369b7,#0c3b73); font-size:11px; font-weight:700; box-shadow:0 4px 9px rgba(21,88,166,.25); }
+    .step b { display:block; color:#17365b; margin-bottom:3px; font-size:13px; }
+    .source-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .name-list-card { position:relative; overflow:hidden; }
+    .guard-status { display:block; min-height:20px; margin-top:10px; color:#64758c; font-size:12px; }
+    .guard-status.error { color:#a12a35; font-weight:650; }
+    .guard-status.success { color:#226745; font-weight:650; }
+    .guard-results { display:none; margin-top:16px; padding:14px 16px; border:1px solid #dce7f2; border-radius:12px; background:linear-gradient(120deg,#f7faff,#fff); }
+    .guard-results.show { display:block; }
+    .guard-results h4 { margin:0 0 8px; color:#17365b; font-size:12px; }
+    .guard-name-list { display:flex; flex-wrap:wrap; gap:7px; margin:0; padding:0; list-style:none; }
+    .guard-name-list li { padding:5px 9px; border:1px solid #dce5ef; border-radius:999px; background:#fff; color:#315274; font-size:11px; }
+    .guard-review { margin-top:10px; color:#8b5b18; font-size:11px; line-height:1.5; white-space:pre-line; }
+    .guard-review:empty { display:none; }
+    .name-list-note { margin:12px 0 0; color:#74849a; font-size:11px; line-height:1.5; }
+    .name-list-actions { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; }
+    .name-list-clear { padding:5px 8px; border:1px solid #d9e3ef; border-radius:8px; color:#49617d; background:#f7f9fc; font-size:10px; font-weight:650; cursor:pointer; }
+    .name-list-clear[hidden] { display:none; }
+    .source-card,.settings-card { min-width:0; padding:19px; border:1px solid #dfe7f1; border-radius:15px; background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(247,250,254,.94)); box-shadow:0 9px 24px rgba(28,53,87,.045); }
+    .card-heading,.section-head { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .card-heading h3,.section-head h3 { margin:1px 0 0; color:#17365b; font-size:15px; letter-spacing:-.1px; }
+    .mini-eyebrow { color:#74849a; font-size:10px; letter-spacing:1.25px; font-weight:750; text-transform:uppercase; }
+    .tag { white-space:nowrap; padding:5px 9px; border:1px solid #dce5f0; border-radius:999px; background:#f6f9fd; color:#5b6d84; font-size:10px; font-weight:700; letter-spacing:.35px; }
+    .card-hint { margin:7px 0 14px; color:var(--muted); font-size:12px; }
+    .file-input-hidden { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
+    .drop-zone { min-height:100px; display:flex; align-items:center; gap:13px; padding:15px; border:1px dashed #9db4cf; border-radius:13px; background:linear-gradient(115deg,#f8fbff,#f2f7fd); cursor:pointer; transition:border-color .2s,background .2s,transform .2s,box-shadow .2s; }
+    .drop-zone:hover,.drop-zone.dragging { border-color:#2f70b4; background:linear-gradient(115deg,#f3f8ff,#eaf3fd); box-shadow:0 0 0 4px rgba(47,112,180,.08); }
+    .file-input-hidden:focus-visible + .drop-zone { outline:3px solid rgba(47,112,180,.3); outline-offset:3px; }
+    .drop-zone.dragging { transform:scale(1.006); }
+    .upload-icon { width:42px; height:42px; flex:0 0 auto; display:grid; place-items:center; border:1px solid #d5e3f1; border-radius:12px; background:white; color:#1d5b99; box-shadow:0 5px 12px rgba(33,80,130,.08); }
+    .upload-icon svg { width:21px; height:21px; }
+    .drop-copy { min-width:0; flex:1; }
+    .drop-copy strong { display:block; color:#183b63; font-size:13px; }
+    .drop-copy small { display:block; margin-top:2px; color:#718198; font-size:11px; }
+    .browse-button { flex:0 0 auto; padding:8px 12px; border:1px solid #cbd9e9; border-radius:9px; background:white; color:#164c81; font-size:12px; font-weight:700; box-shadow:0 3px 9px rgba(31,69,110,.05); transition:all .18s; }
+    .drop-zone:hover .browse-button { border-color:#2f70b4; color:#0b467e; box-shadow:0 5px 13px rgba(31,92,151,.13); }
+    .file-meta { display:flex; align-items:center; gap:8px; min-width:0; margin-top:11px; color:#687a91; font-size:11px; }
+    .file-meta::before { content:""; width:6px; height:6px; flex:0 0 auto; border-radius:50%; background:#aab9ca; }
+    .file-meta.selected { color:#245d90; font-weight:650; }
+    .file-meta.selected::before { background:#35a06c; box-shadow:0 0 0 3px rgba(53,160,108,.12); }
+    input[type=month],input[type=time],input:not([type]) { width:100%; min-width:0; min-height:42px; border:1px solid #d4deeb; border-radius:9px; padding:9px 11px; color:#22344c; background:rgba(255,255,255,.96); font:inherit; transition:border-color .2s,box-shadow .2s; }
+    input:focus { outline:0; border-color:#3978bd; box-shadow:0 0 0 3px rgba(52,115,184,.14); }
+    .template-card { display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; position:relative; }
+    .template-card::after { content:""; position:absolute; width:170px; height:170px; right:-75px; bottom:-115px; border:1px solid rgba(27,92,151,.11); border-radius:50%; box-shadow:0 0 0 15px rgba(27,92,151,.025),0 0 0 31px rgba(27,92,151,.02); pointer-events:none; }
+    .template-lockup { display:flex; align-items:flex-start; gap:13px; }
+    .template-icon { width:43px; height:43px; flex:0 0 auto; display:grid; place-items:center; border-radius:12px; color:#926c19; background:linear-gradient(145deg,#fff9e9,#f8edcf); border:1px solid #f0dfb1; }
+    .template-icon svg { width:21px; height:21px; }
+    .template-copy { min-width:0; }
+    .template-copy h3 { margin:2px 0 4px; color:#17365b; font-size:15px; }
+    .template-copy p { margin:0; color:var(--muted); font-size:12px; }
+    .template-ready { display:flex; align-items:center; gap:7px; margin-top:18px; color:#26714d; font-size:10px; font-weight:750; letter-spacing:.8px; }
+    .template-ready::before { content:""; width:7px; height:7px; border-radius:50%; background:#39a36f; box-shadow:0 0 0 3px rgba(57,163,111,.12); }
+    .template-ready span { margin-left:auto; padding:4px 8px; border:1px solid #dbe9df; border-radius:999px; color:#587261; background:#f5faf6; font-size:10px; letter-spacing:.1px; }
+    .template-upload { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:9px 12px; margin-top:15px; padding-top:13px; border-top:1px solid #e7edf4; }
+    .template-upload-copy { min-width:0; color:#344965; font-size:12px; font-weight:700; }
+    .template-upload-copy small { display:block; margin-top:2px; color:#75849a; font-size:10px; font-weight:400; }
+    .template-browse { min-height:36px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:7px 11px; border:1px solid #cbd9e9; border-radius:9px; color:#164c81; background:linear-gradient(135deg,#fff,#f6f9fd); box-shadow:0 3px 9px rgba(31,69,110,.05); cursor:pointer; font-size:11px; font-weight:700; transition:all .18s; }
+    .template-browse:hover { border-color:#2f70b4; background:#f2f7fd; box-shadow:0 5px 13px rgba(31,92,151,.13); }
+    .template-browse svg { width:15px; height:15px; }
+    #templateFile:focus-visible + .template-browse { outline:3px solid rgba(47,112,180,.3); outline-offset:3px; }
+    .template-file-meta { grid-column:1/-1; display:flex; align-items:center; gap:7px; min-width:0; color:#687a91; font-size:10px; overflow-wrap:anywhere; }
+    .template-file-meta::before { content:""; width:6px; height:6px; flex:0 0 auto; border-radius:50%; background:#39a36f; box-shadow:0 0 0 3px rgba(57,163,111,.12); }
+    .template-reset { grid-column:1/-1; justify-self:start; min-height:30px; padding:5px 9px; border:1px solid #d9e3ef; border-radius:8px; color:#49617d; background:#f7f9fc; font-size:10px; box-shadow:none; }
+    .template-reset[hidden] { display:none; }
+    .settings-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.12fr); gap:14px; margin-top:14px; }
+    .section-head { margin-bottom:14px; }
+    .section-mark { width:27px; height:27px; flex:0 0 auto; display:grid; place-items:center; border-radius:8px; background:#edf3fa; color:#275b91; font-size:11px; font-weight:750; }
+    .section-name { display:flex; align-items:center; gap:9px; }
+    .form-grid { display:grid; gap:12px; }
+    .form-grid.output-fields { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .form-grid.time-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .form-field { min-width:0; }
+    .form-field label { display:block; min-height:18px; margin-bottom:6px; color:#344965; font-size:11px; font-weight:700; letter-spacing:.1px; }
+    .form-field .small { display:block; margin-top:5px; }
+    .rules { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:17px; padding:15px; background:linear-gradient(120deg,#f7f9fc,#eef4fa); border:1px solid #dce5f0; border-radius:12px; }
+    .rules h3 { grid-column:1/-1; margin:0; color:var(--navy); font-size:13px; }
+    .actions { display:grid; grid-template-columns:minmax(0,1fr) minmax(250px,.75fr); align-items:center; gap:14px; margin-top:18px; }
+    .action-buttons { min-width:0; display:flex; flex-wrap:wrap; align-items:center; gap:9px; }
+    button { min-height:42px; border:1px solid rgba(8,45,91,.12); background:linear-gradient(120deg,#1e66b1,#10447f); color:#fff; font-weight:650; border-radius:9px; padding:10px 17px; cursor:pointer; font:inherit; box-shadow:0 7px 17px rgba(21,75,132,.18); transition:transform .18s,box-shadow .18s,filter .18s; }
+    button:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 10px 22px rgba(21,75,132,.25); filter:brightness(1.04); }
+    button.secondary { background:linear-gradient(120deg,#f3f6fa,#e8eef6); color:#203754; border-color:#d8e1ec; box-shadow:none; }
+    button:disabled { opacity:.46; cursor:not-allowed; box-shadow:none; }
+    #processBtn { background:linear-gradient(112deg,#c5972d,#e3b64e 53%,#c68e22); color:#10233e; border:0; box-shadow:0 8px 20px rgba(197,151,45,.25); }
+    .status { min-width:0; min-height:44px; display:flex; align-items:center; gap:9px; padding:10px 13px; border:1px solid #dfe7f0; border-radius:11px; background:linear-gradient(120deg,#f8fafc,#f2f6fa); color:#61728a; font-size:12px; line-height:1.4; }
+    .status::before { content:""; width:7px; height:7px; flex:0 0 auto; border-radius:50%; background:#91a2b7; }
+    .status.error { color:#9d2732; border-color:#f0d2d5; background:linear-gradient(120deg,#fff8f8,#fff1f2); font-weight:650; }
+    .status.error::before { background:#c74a55; box-shadow:0 0 0 3px rgba(199,74,85,.12); }
+    .status.success { color:#226745; border-color:#d5e9dd; background:linear-gradient(120deg,#f7fcf8,#eef8f1); font-weight:650; }
+    .status.success::before { background:#3a9b68; box-shadow:0 0 0 3px rgba(58,155,104,.12); }
+    .summary { display:none; grid-template-columns:repeat(4,1fr); gap:11px; margin-top:21px; }
+    .metric { position:relative; overflow:hidden; border:1px solid #e0e7f0; border-radius:12px; padding:13px 15px; background:linear-gradient(135deg,#fff,#f8fafd); box-shadow:0 6px 17px rgba(29,54,87,.04); }
+    .metric::after { content:""; position:absolute; right:-17px; bottom:-32px; width:74px; height:74px; border-radius:50%; background:rgba(34,100,173,.05); }
+    .metric strong { display:block; font-size:23px; letter-spacing:-.4px; color:#164b85; }
+    .metric span { color:var(--muted); font-size:11px; }
+    .note { margin-top:17px; padding:13px 15px; border:1px solid #f1dfad; border-left:4px solid #d2a23c; background:linear-gradient(120deg,#fff9e9,#fffdf7); color:#65501e; border-radius:8px; font-size:13px; }
+    .table-wrap { max-height:340px; overflow:auto; border:1px solid #dce5ef; border-radius:10px; background:white; }
+    table { width:100%; border-collapse:collapse; font-size:12px; }
+    th,td { text-align:left; padding:9px 11px; border-bottom:1px solid #e9eef4; vertical-align:top; }
+    th { position:sticky; top:0; background:#eef3f9; color:#273e5d; z-index:1; font-size:11px; text-transform:uppercase; letter-spacing:.5px; }
+    .empty { color:var(--muted); padding:14px 0; }
+    .small { font-size:11px; color:var(--muted); }
+    .section-title { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .site-splash { position:fixed; inset:0; z-index:30; display:grid; place-items:center; padding:22px; color:white; background:radial-gradient(ellipse at 80% 15%,rgba(45,107,169,.52),transparent 35%),linear-gradient(135deg,#07172d,#103867 62%,#15599b); opacity:1; visibility:visible; transition:opacity .45s ease,visibility .45s ease; }
+    .site-splash.is-done { opacity:0; visibility:hidden; pointer-events:none; }
+    .splash-content { width:min(360px,100%); text-align:center; animation:splashRise .55s cubic-bezier(.2,.8,.2,1) both; }
+    .splash-seal { width:88px; height:88px; display:block; margin:0 auto 21px; padding:5px; border:1px solid rgba(255,255,255,.52); border-radius:50%; background:rgba(255,255,255,.96); box-shadow:0 12px 38px rgba(0,0,0,.24),0 0 0 8px rgba(255,255,255,.08); }
+    .splash-seal img { width:100%; height:100%; display:block; border-radius:50%; object-fit:contain; }
+    .splash-kicker { margin:0 0 6px; color:#f2cc72; font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+    .splash-content h1 { margin:0; color:#fff; font-size:clamp(23px,5vw,30px); line-height:1.2; letter-spacing:-.5px; }
+    .splash-caption { margin:9px 0 24px; color:#d5e3f4; font-size:13px; }
+    .splash-progress { width:150px; height:3px; overflow:hidden; margin:0 auto; border-radius:8px; background:rgba(255,255,255,.2); }
+    .splash-progress span { display:block; width:40%; height:100%; border-radius:inherit; background:linear-gradient(90deg,#e9b949,#fff0bd); animation:splashSweep 1.25s ease-in-out infinite; }
+    .splash-status { margin:12px 0 0; color:#b9cce3; font-size:11px; letter-spacing:.5px; }
+    @keyframes splashRise { from{opacity:0;transform:translateY(10px) scale(.98)} to{opacity:1;transform:translateY(0) scale(1)} }
+    @keyframes splashSweep { from{transform:translateX(-110%)} to{transform:translateX(360%)} }
+    @media(prefers-reduced-motion:reduce) { .site-splash,.splash-content { transition:none; animation:none; } .splash-progress span { animation:none; width:100%; } }
+    .loading-backdrop { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(7,19,38,.42); backdrop-filter:blur(8px); z-index:10; }
+    .loading-backdrop.show { display:flex; animation:fadeIn .18s ease-out; }
+    .loading-card { width:min(390px,100%); padding:28px; text-align:center; border:1px solid rgba(255,255,255,.7); border-radius:20px; background:rgba(255,255,255,.94); box-shadow:0 30px 90px rgba(3,20,43,.3); }
+    .spinner { width:44px; height:44px; margin:0 auto 14px; border:4px solid #dce7f4; border-top-color:#d0a13d; border-right-color:#2865a5; border-radius:50%; animation:spin .8s linear infinite; }
+    .loading-card h3 { margin:0 0 5px; color:#12385f; font-size:17px; }
+    .loading-card p { margin:0; color:#65748a; font-size:13px; }
+    .progress-track { overflow:hidden; height:5px; margin-top:17px; border-radius:8px; background:#e7edf5; }
+    .progress-track span { display:block; width:38%; height:100%; border-radius:inherit; background:linear-gradient(90deg,#d3a745,#2865a5,#d3a745); animation:loadSweep 1.6s ease-in-out infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes loadSweep { 0%{transform:translateX(-110%)} 100%{transform:translateX(300%)} }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @media(max-width:1100px) { .source-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media(max-width:900px) { .source-grid,.settings-grid { grid-template-columns:1fr; } .name-list-card { grid-column:auto; } .actions { grid-template-columns:1fr; } }
+    @media(max-width:760px) { .rules { grid-template-columns:1fr 1fr; } .steps { grid-template-columns:1fr; } .summary { grid-template-columns:1fr 1fr; } .brand-logo { width:62px;height:62px; } }
+    @media(max-width:520px) { main { margin:12px auto; padding:0 10px 24px; } header,.panel { padding:19px 16px; } .rules,.summary,.form-grid.output-fields { grid-template-columns:1fr; } .brand-lockup { gap:10px; } .brand-logo { width:48px;height:48px;padding:3px; } .brand-copy p:not(.eyebrow) { font-size:12px; } .source-card,.settings-card { padding:15px; } .drop-zone { min-height:88px; gap:9px; padding:11px; } .upload-icon { width:36px;height:36px; } .browse-button { padding:7px 9px;font-size:11px; } .drop-copy strong { font-size:12px; } .drop-copy small { font-size:10px; } .template-upload { grid-template-columns:minmax(0,1fr); } .template-browse { justify-self:start; } .form-grid.time-fields { grid-template-columns:1fr 1fr; } .action-buttons { display:grid; grid-template-columns:1fr; } .action-buttons button { width:100%; } .status { font-size:11px; } }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; transition-duration:.01ms!important; } }
+    /* Romblon OneStop visual layer */
+    body { color:#18263d; font-family:"DM Sans","Segoe UI",Arial,sans-serif; background-color:#0a1b38; background-image:linear-gradient(rgba(197,214,240,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(197,214,240,.035) 1px,transparent 1px),radial-gradient(ellipse at 92% 6%,rgba(41,76,127,.62),transparent 34%),linear-gradient(135deg,#07142d,#102b52 78%,#142f56); background-size:38px 38px,38px 38px,auto,auto; }
+    .portal-toolbar { max-width:1320px; min-height:72px; display:flex; align-items:center; justify-content:space-between; gap:18px; margin:0 auto; padding:10px 24px; color:#10213f; background:#f8f8f5; border:1px solid rgba(255,255,255,.72); border-radius:0 0 15px 15px; box-shadow:0 10px 30px rgba(0,0,0,.12); }
+    .portal-toolbar a { display:inline-flex; align-items:center; gap:8px; color:#52637e; font-size:13px; font-weight:700; text-decoration:none; }
+    .portal-toolbar a:hover { color:#122a4d; }
+    .portal-toolbar-brand { display:flex; align-items:center; gap:10px; }
+    .portal-toolbar-brand img { width:38px; height:38px; object-fit:contain; }
+    .portal-toolbar-brand span { display:grid; gap:1px; }
+    .portal-toolbar-brand small { color:#74819a; font-size:9px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; }
+    .portal-toolbar-brand strong { color:#132747; font-size:14px; }
+    .portal-toolbar-tag { padding:6px 9px; border:1px solid #e7deca; border-radius:999px; color:#81621e; background:#fbf7eb; font-size:9px; font-weight:750; letter-spacing:.13em; }
+    main { max-width:1320px; margin:24px auto; }
+    main > header { border-radius:22px; background:linear-gradient(116deg,#0a1932 0%,#122b50 72%,#1a3458 100%); box-shadow:0 24px 60px rgba(0,0,0,.24); }
+    main > .panel { margin-top:14px; border:1px solid rgba(238,235,225,.82); border-radius:20px; background:#f7f6f1; box-shadow:0 22px 55px rgba(0,0,0,.16); }
+    main > .panel:last-child { border-radius:20px; }
+    .brand-lockup { gap:16px; }
+    .brand-logo { width:64px; height:64px; padding:3px; border-color:rgba(222,190,111,.86); }
+    .brand-copy h1 { font-size:clamp(26px,3.2vw,38px); letter-spacing:-1.1px; }
+    .eyebrow { letter-spacing:.15em; }
+    .privacy-pill { color:#e5ebf4; background:rgba(255,255,255,.07); }
+    .source-card,.settings-card,.metric { border-color:#e4e0d5; background:linear-gradient(145deg,#fffefa,#f5f3ec); }
+    .step { border-color:#e4e0d5; background:linear-gradient(145deg,#fffefa,#f6f4ee); }
+    .step::before { background:#19365e; box-shadow:0 4px 9px rgba(18,44,79,.18); }
+    .step b,.card-heading h3,.section-head h3,.template-copy h3 { color:#193252; }
+    #processBtn { background:linear-gradient(120deg,#e4c77d,#cfaa55); color:#182944; box-shadow:0 8px 20px rgba(155,121,49,.18); }
+    button:not(.secondary):not(#processBtn) { background:linear-gradient(120deg,#203f68,#173153); }
+    .site-splash { background:radial-gradient(ellipse at 80% 15%,rgba(62,91,138,.3),transparent 35%),linear-gradient(135deg,#07142d,#102b52 78%,#142f56); }
+    @media(max-width:600px) { .portal-toolbar { min-height:62px; padding:8px 14px; } .portal-toolbar-brand img { width:32px;height:32px; } .portal-toolbar-tag { display:none; } main { margin:14px auto; } main > header { border-radius:18px; } main > .panel { border-radius:16px; } }
+  </style>
+</head>
+<body>
+<div class="site-splash" id="siteSplash" role="status" aria-live="polite" aria-label="Loading Daily Time Record Generator">
+  <div class="splash-content">
+    <span class="splash-seal"><img src="/assets/logos/deped-romblon.png" alt=""></span>
+    <p class="splash-kicker">SDO ROMBLON · ICT WORKSPACE</p>
+    <h1>Daily Time Record Generator</h1>
+    <p class="splash-caption">Preparing your secure attendance workspace</p>
+    <div class="splash-progress" aria-hidden="true"><span></span></div>
+    <p class="splash-status">LOADING</p>
+  </div>
+</div>
+<nav class="portal-toolbar" aria-label="ICT workspace navigation">
+  <a href="../../ict-dashboard.html">← <span>ICT workspace</span></a>
+  <a class="portal-toolbar-brand" href="../../index.html" aria-label="Romblon OneStop home"><img src="/assets/logos/deped-romblon.png" alt=""><span><small>Schools Division Office</small><strong>Romblon OneStop</strong></span></a>
+  <span class="portal-toolbar-tag">ICT TOOLS</span>
+</nav>
+<main>
+  <header>
+    <div class="brand-lockup">
+      <div class="brand-logo"><img src="/assets/logos/deped-romblon.png" alt="SDO Romblon seal"></div>
+      <div class="brand-copy"><p class="eyebrow">ICT WORKSPACE · PERSONNEL SUPPORT TOOL</p><h1>Daily Time Record Generator</h1><p>Prepare monthly attendance workbooks with SDO Romblon’s official DTR template.</p></div>
+    </div>
+    <div class="privacy-pill"><span class="privacy-dot"></span>OFFLINE PROCESSING · YOUR FILES STAY ON THIS DEVICE</div>
+  </header>
+  <section class="panel">
+    <h2>Generate a monthly DTR</h2>
+    <div class="steps">
+      <div class="step" data-step="1"><b>Select the logs</b>Choose the employee log and optionally add the separate guards log.</div>
+      <div class="step" data-step="2"><b>Process and review</b>Times are sorted and assigned by the configured time windows. Exceptions are listed.</div>
+      <div class="step" data-step="3"><b>Download completed DTRs</b>Creates one workbook per office, with each employee DTR on its own sheet.</div>
+      </div>
+      <div class="source-grid">
+        <div class="source-card">
+          <div class="card-heading"><div><span class="mini-eyebrow">STEP 01 · SOURCE</span><h3>Attendance log</h3></div><span class="tag">EXCEL · .XLSX</span></div>
+          <p class="card-hint">Select one monthly ZKTime 5.0 export to prepare the DTRs.</p>
+          <input id="logFile" class="file-input-hidden" type="file" accept=".xlsx" aria-label="Choose ZKTime Excel attendance log">
+          <label class="drop-zone" id="dropZone" for="logFile">
+            <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></span>
+            <span class="drop-copy"><strong>Drop your log here</strong><small>or browse to choose an Excel file</small></span>
+            <span class="browse-button">Browse files</span>
+          </label>
+          <div class="file-meta" id="logFileName" aria-live="polite">No attendance log selected</div>
+        </div>
+        <div class="source-card guard-upload-card">
+          <div class="card-heading"><div><span class="mini-eyebrow">OPTIONAL · SPECIAL SHIFT</span><h3>Guards punch log</h3></div><span class="tag">.XLS · .XLSX</span></div>
+          <p class="card-hint">Upload the guards’ punch-level export when needed. The Guards roster and separate C/In · C/Out rules are used. Leave empty to omit guards.</p>
+          <input id="guardLogFile" class="file-input-hidden" type="file" accept=".xls,.xlsx" aria-label="Choose an optional guards punch log">
+          <label class="drop-zone" id="guardDropZone" for="guardLogFile"><span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></span><span class="drop-copy"><strong>Drop the guards log here</strong><small>or browse for an Excel .xls or .xlsx file</small></span><span class="browse-button">Browse files</span></label>
+          <div class="name-list-actions"><div class="file-meta" id="guardFileName" aria-live="polite">No guards log selected</div><button class="name-list-clear" id="clearGuardLog" type="button" hidden>Remove log</button></div>
+          <span id="guardStatus" class="guard-status" role="status" aria-live="polite">Optional: guards will be omitted unless a guards log is uploaded.</span>
+          <div class="guard-results" id="guardResults"><h4>Guards matched to the official list</h4><ul class="guard-name-list" id="guardNames"></ul><div class="guard-review" id="guardReview"></div></div>
+        </div>
+        <div class="source-card name-list-card">
+          <div class="card-heading"><div><span class="mini-eyebrow">PRIVATE ROSTER · OPTIONAL</span><h3>Official employee names</h3></div><span class="tag">LOCAL TO THIS BROWSER</span></div>
+          <p class="card-hint">Upload the approved roster if you want names and office assignments matched. The roster is kept in this browser and is not sent to OneStop.</p>
+          <input id="officialNamesFile" class="file-input-hidden" type="file" accept=".xlsx" aria-label="Upload the official employee names workbook">
+          <label class="drop-zone" for="officialNamesFile">
+            <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></span>
+            <span class="drop-copy"><strong>Choose the private official roster</strong><small>Excel .xlsx · saved only in this browser</small></span>
+            <span class="browse-button">Browse files</span>
+          </label>
+          <div class="name-list-actions"><div class="file-meta" id="officialNamesStatus" aria-live="polite">No official list saved in this browser</div><button class="name-list-clear" id="clearOfficialNames" type="button" hidden>Remove saved list</button></div>
+          <p class="name-list-note">Without a roster, names stay as recorded in the log and its department is used as the office. Guards are processed from their separate log.</p>
+        </div>
+        <div class="source-card template-card">
+          <div>
+            <div class="card-heading"><div><span class="mini-eyebrow">OFFICIAL FORM</span><h3>Agency DTR template</h3></div><span class="tag">PRELOADED</span></div>
+            <div class="template-lockup" style="margin-top:17px">
+              <span class="template-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.75h8l4 4V20a.75.75 0 0 1-.75.75h-10.5A.75.75 0 0 1 6 20V3.75Z"/><path d="M14 3.75V8h4M9 12h6M9 15.5h6"/></svg></span>
+              <div class="template-copy"><h3>2026 DTR template ready</h3><p>Applied automatically to each employee workbook.</p></div>
+            </div>
+          </div>
+              <div class="template-ready"><b id="templateStatusText">PRELOADED TEMPLATE</b><span id="templateFormat">Legal · Portrait</span></div>
+              <div class="template-upload">
+                <div class="template-upload-copy">Have a new template?<small>Click or browse to upload an .xlsx with the same DTR layout.</small></div>
+                <input id="templateFile" class="file-input-hidden" type="file" accept=".xlsx" aria-label="Choose a replacement DTR template">
+                <label class="template-browse" for="templateFile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>Browse template</label>
+                <div class="template-file-meta" id="templateFileName" aria-live="polite">Using the preloaded agency template</div>
+                <button class="template-reset" type="button" id="templateReset" hidden>Use preloaded template</button>
+              </div>
+        </div>
+      </div>
+      <div class="settings-grid">
+        <section class="settings-card">
+          <div class="section-head"><div class="section-name"><span class="section-mark">02</span><h3>DTR details</h3></div></div>
+          <div class="form-grid output-fields">
+            <div class="form-field"><label for="period">DTR month</label><input id="period" type="month"></div>
+            <div class="form-field"><label for="division">Division</label><input id="division" value="Division of Romblon"></div>
+            <div class="form-field"><label for="location">Office / location</label><input id="location" value="Romblon, Romblon"></div>
+          </div>
+        </section>
+        <section class="settings-card">
+          <div class="section-head"><div class="section-name"><span class="section-mark">03</span><h3>Clock assignment windows</h3></div></div>
+          <div class="form-grid time-fields">
+            <div class="form-field"><label for="startTime">AM arrival starts</label><input id="startTime" type="time" value="05:00"></div>
+            <div class="form-field"><label for="lunchStart">AM departure starts</label><input id="lunchStart" type="time" value="12:00"></div>
+            <div class="form-field"><label for="lunchEnd">AM departure ends</label><input id="lunchEnd" type="time" value="12:59"></div>
+            <div class="form-field"><label for="pmArrivalEnd">PM arrival window ends</label><input id="pmArrivalEnd" type="time" value="15:00"></div>
+            <div class="form-field"><label for="departureStart">PM departure starts</label><input id="departureStart" type="time" value="17:00"></div>
+          </div>
+        </section>
+      </div>
+    <div class="actions">
+      <div class="action-buttons">
+        <button id="processBtn" disabled>Start Process</button>
+        <button id="excelBtn" disabled>Download all office DTRs (.zip)</button>
+        <button id="csvBtn" class="secondary" disabled>Download exception list</button>
+      </div>
+      <span class="status" id="status" role="status" aria-live="polite">Choose a ZKTime .xlsx file to begin.</span>
+    </div>
+    <div class="summary" id="summary">
+      <div class="metric"><strong id="employeeCount">0</strong><span>DTRs included · guards if uploaded</span></div>
+      <div class="metric"><strong id="dayCount">0</strong><span>employee/date records</span></div>
+      <div class="metric"><strong id="exceptionCount">0</strong><span>items for review</span></div>
+      <div class="metric"><strong id="periodLabel">—</strong><span>selected DTR period</span></div>
+    </div>
+    <div class="note"><b>Review before signing:</b> regular employee punches from 5:00 AM–11:59 AM fill AM Arrival; 12:00 PM–12:59 PM fill AM Departure; a later punch through 3:00 PM can fill PM Arrival; and punches from 5:00 PM fill PM Departure. A lone noon-window punch is flagged because PM Arrival cannot be confirmed. Punches from 3:01–4:59 PM and duplicate employee/date rows are also flagged. Export completed DTR workbooks to PDF in Excel to preserve your official template exactly.</div>
+  </section>
+  <section class="panel" id="exceptionsPanel" style="display:none">
+    <div class="section-title"><h2>Records for review</h2><span class="small">Source log stays unchanged.</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Employee ID</th><th>Employee</th><th>Date</th><th>Issue</th><th>Times</th></tr></thead><tbody id="exceptionRows"></tbody></table></div>
+  <p class="small">Check flagged records against the original attendance log before certification.</p>
+  </section>
+</main>
+<div class="loading-backdrop" id="loadingOverlay" role="status" aria-live="polite" aria-hidden="true"><div class="loading-card"><div class="spinner" aria-hidden="true"></div><h3>Preparing your DTRs</h3><p id="loadingText">Please wait while the records are processed.</p><div class="progress-track"><span></span></div></div></div>
+<script src="assets/jszip.min.js"></script>
+<script src="assets/template-data.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let parsedLog = null;
+  let processed = null;
+  let activePeriod = null;
+  let templateOverride = null;
+  let guardLog = null;
+  const preloadedOfficialEmployees = Array.isArray(window.DTR_PRELOADED_OFFICIAL_EMPLOYEES) ? window.DTR_PRELOADED_OFFICIAL_EMPLOYEES : [];
+  const preloadedOfficialNames = Array.isArray(window.DTR_PRELOADED_OFFICIAL_NAMES) ? window.DTR_PRELOADED_OFFICIAL_NAMES : preloadedOfficialEmployees.map(employee=>employee.name);
+  let officialNamesPreloaded = preloadedOfficialEmployees.length > 0 || preloadedOfficialNames.length > 0;
+  let officialEmployees = officialNamesPreloaded ? preloadedOfficialEmployees.map(employee=>({name:employee.name,offices:Array.isArray(employee.offices)?employee.offices:[]})) : readSavedOfficialEmployees();
+  let officialNames = officialEmployees.map(employee=>employee.name);
+  const timeToMin = v => { if (!v) return NaN; const [h,m] = v.split(':').map(Number); return h*60+m; };
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function excelDate(v) {
+    if (typeof v === 'number' && Number.isFinite(v)) return new Date(Date.UTC(1899,11,30) + Math.floor(v)*86400000);
+    if (v instanceof Date) return v;
+    const d = new Date(String(v));
+    return Number.isNaN(d.getTime()) ? null : new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  }
+  function excelTime(v) {
+    if (v == null || v === '') return null;
+    if (typeof v === 'number' && Number.isFinite(v)) return Math.round((((v%1)+1)%1)*1440)%1440;
+    const s = String(v).trim();
+    const m = s.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+    if (!m) return null;
+    let h=Number(m[1]), minute=Number(m[2]);
+    if (m[4]) { const ap=m[4].toUpperCase(); h=(h%12)+(ap==='PM'?12:0); }
+    if (h>23||minute>59) return null;
+    return h*60+minute;
+  }
+  function colIndex(ref) { let n=0; for (const c of ref.match(/^[A-Z]+/i)[0].toUpperCase()) n=n*26+c.charCodeAt(0)-64; return n-1; }
+  async function parseXlsx(file) {
+    const zip=await JSZip.loadAsync(file);
+    const workbookXml=await zip.file('xl/workbook.xml').async('text');
+    const relsXml=await zip.file('xl/_rels/workbook.xml.rels').async('text');
+    const wb=new DOMParser().parseFromString(workbookXml,'application/xml');
+    const relDoc=new DOMParser().parseFromString(relsXml,'application/xml');
+    const sheet=wb.getElementsByTagNameNS('*','sheet')[0];
+    if (!sheet) throw new Error('The workbook has no worksheets.');
+    const relId=sheet.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id')||sheet.getAttribute('r:id');
+    const rel=[...relDoc.getElementsByTagNameNS('*','Relationship')].find(x=>x.getAttribute('Id')===relId);
+    if (!rel) throw new Error('Could not locate the first worksheet in this Excel file.');
+    let target=rel.getAttribute('Target').replace(/^\//,'');
+    if (!target.startsWith('xl/')) target='xl/'+target;
+    const sheetFile=zip.file(target);
+    if (!sheetFile) throw new Error('The first worksheet could not be read.');
+    let shared=[];
+    if (zip.file('xl/sharedStrings.xml')) {
+      const ss=new DOMParser().parseFromString(await zip.file('xl/sharedStrings.xml').async('text'),'application/xml');
+      shared=[...ss.getElementsByTagNameNS('*','si')].map(si=>[...si.getElementsByTagNameNS('*','t')].map(t=>t.textContent).join(''));
+    }
+    const doc=new DOMParser().parseFromString(await sheetFile.async('text'),'application/xml');
+    const rows=[...doc.getElementsByTagNameNS('*','row')];
+    const grid=[];
+    for (const row of rows) {
+      const values=[];
+      for (const c of [...row.getElementsByTagNameNS('*','c')]) {
+        const idx=colIndex(c.getAttribute('r'));
+        const type=c.getAttribute('t');
+        let v=c.getElementsByTagNameNS('*','v')[0]?.textContent ?? '';
+        if (type==='s') v=shared[Number(v)] ?? '';
+        else if (type==='inlineStr') v=[...c.getElementsByTagNameNS('*','t')].map(t=>t.textContent).join('');
+        else if (type==='b') v=v==='1';
+        else if (v!=='' && !type) { const num=Number(v); if(Number.isFinite(num)) v=num; }
+        values[idx]=v;
+      }
+      grid.push(values);
+    }
+    return grid;
+  }
+  function rowDate(v) {
+    if (typeof v==='number') return excelDate(v);
+    if (typeof v==='string' && /^\d+(\.\d+)?$/.test(v)) return excelDate(Number(v));
+    return excelDate(v);
+  }
+  function keyDate(d) { return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`; }
+  function formatDateKey(key) { const [y,m,d]=key.split('-').map(Number); return `${String(m).padStart(2,'0')}/${String(d).padStart(2,'0')}/${y}`; }
+  function timeLabel(min) { if(min==null) return ''; let h=Math.floor(min/60),m=min%60; const ap=h>=12?'PM':'AM'; h=h%12||12; return `${h}:${String(m).padStart(2,'0')} ${ap}`; }
+  function parseData(grid) {
+    const head=(grid[0]||[]).map(v=>String(v??'').trim().toLowerCase());
+    const idCol=head.findIndex(x=>x==='ac-no'||x.includes('ac-no')||x==='pin'||x==='employee id');
+    const nameCol=head.findIndex(x=>x==='name'||x.includes('employee name'));
+    const dateCol=head.findIndex(x=>x==='date'||x.includes('date'));
+    if(idCol<0||nameCol<0||dateCol<0) throw new Error('Expected columns were not found. The log must include AC-No (employee ID), Name, and Date.');
+    const rows=[];
+    for(let r=1;r<grid.length;r++) {
+      const line=grid[r]||[]; if(line.every(v=>v==null||v==='')) continue;
+      const id=String(line[idCol]??'').trim(), name=String(line[nameCol]??'').trim(), date=rowDate(line[dateCol]);
+      if(!id||!name||!date||Number.isNaN(date.getTime())) { rows.push({bad:true,row:r+1,id,name,date:null,times:[]}); continue; }
+      const punches=[];
+      for(let c=4;c<=9;c++) { const t=excelTime(line[c]); if(t!=null) punches.push({min:t,sourceCol:c}); }
+      punches.sort((a,b)=>a.min-b.min||a.sourceCol-b.sourceCol);
+      rows.push({id,name,dept:String(line[2]??'').trim(),date: keyDate(date), punches});
+    }
+    return rows;
+  }
+  function readSavedOfficialEmployees() {
+    try {
+      const value=JSON.parse(localStorage.getItem("dtrOfficialNames.v1")||"[]");
+      if(!Array.isArray(value)) return [];
+      return value.map(item=>typeof item==="string"?{name:item,offices:[]}:{name:String(item?.name||"").trim(),offices:Array.isArray(item?.offices)?item.offices.filter(x=>typeof x==="string"):[]}).filter(item=>item.name);
+    } catch { return []; }
+  }
+  function normalizeName(value) {
+    const tokens=String(value??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleUpperCase("en-PH").replace(/[^A-Z0-9]+/g," ").trim().split(/\s+/).filter(Boolean);
+    const suffixes=["JR","SR","II","III","IV","V"],titles=["ATTY","ATTORNEY","DR","MR","MRS","MS","HON","ENGR"];
+    return tokens.filter((token,index)=>!suffixes.includes(token)&&!titles.includes(token)&&(token.length>1||index===tokens.length-1));
+  }
+  function extractOfficialEmployees(grid) {
+    const headings=(grid[1]||[]).map(v=>typeof v==="string"?v.trim():"");
+    const people=new Map();
+    for(let r=2;r<grid.length;r++) for(let c=0;c<headings.length;c++) {
+      const value=(grid[r]||[])[c],office=headings[c];
+      if(typeof value!=="string"||!office) continue;
+      const name=value.trim().replace(/\s+/g," "),tokens=normalizeName(name);
+      if(tokens.length<2||name.length>90||/\b(EMPLOYEES?|DTR|OFFICE|DIVISION|DEPARTMENT|ROMBLON|UNASSIGNED)\b/i.test(name)) continue;
+      const key=tokens.join(" "); let employee=people.get(key);
+      if(!employee) { employee={name,offices:[]}; people.set(key,employee); }
+      if(!employee.offices.includes(office)) employee.offices.push(office);
+    }
+    return [...people.values()];
+  }
+  function updateOfficialNamesStatus() {
+    const status=$("officialNamesStatus"),clear=$("clearOfficialNames");
+    if(officialNames.length) { status.textContent=officialNamesPreloaded?`${officialNames.length} official names preloaded`:`${officialNames.length} official names saved in this browser`; status.classList.add("selected"); clear.hidden=false; clear.textContent=preloadedOfficialNames.length?"Reset to preloaded list":"Remove saved list"; }
+    else { status.textContent="No official list saved in this browser"; status.classList.remove("selected"); clear.hidden=true; }
+  }
+  function matchOfficialEmployee(biometricName) {
+    if(!officialEmployees.length) return null;
+    const source=normalizeName(biometricName); if(source.length<2) return null;
+    const candidates=[];
+    for(const official of officialEmployees) {
+      const target=normalizeName(official.name);
+      if(target.length!==source.length) continue;
+      const exact=target.every((token,i)=>token===source[i]);
+      const surnamePrefix=target.slice(0,-1).every((token,i)=>token===source[i])&&source.at(-1).length>=1&&target.at(-1).startsWith(source.at(-1));
+      if(exact||surnamePrefix) candidates.push(official);
+    }
+    return candidates.length===1?candidates[0]:null;
+  }
+  function usableLogOffice(value) {
+    const office=String(value??"").trim();
+    if(!office||/^(OUR COMPANY|COMPANY|ALL|ALL EMPLOYEES|N\/?A|NONE|UNASSIGNED)$/i.test(office)) return "";
+    return office;
+  }
+  function officeForEmployee(employee,logDepartment) {
+    const offices=[...new Set((employee.offices||[]).map(x=>String(x).trim()).filter(Boolean))];
+    if(offices.length===1) return offices[0];
+    if(offices.length>1) {
+      const department=usableLogOffice(logDepartment);
+      const departmentKey=normalizeName(department).join(" ");
+      const match=offices.find(office=>normalizeName(office).join(" ")===departmentKey);
+      return match||"Multiple Offices";
+    }
+    return usableLogOffice(logDepartment)||"Unassigned";
+  }
+  updateOfficialNamesStatus();
+  function assignPunches(records) {
+    const start=timeToMin($('startTime').value), lunchStart=timeToMin($('lunchStart').value), lunchEnd=timeToMin($('lunchEnd').value), pmArrivalEnd=timeToMin($('pmArrivalEnd').value), leaveStart=timeToMin($('departureStart').value);
+    if(!(start<lunchStart&&lunchStart<=lunchEnd&&lunchEnd<pmArrivalEnd&&pmArrivalEnd<leaveStart)) throw new Error('Time windows must be in order: AM arrival, AM departure, PM arrival, then PM departure.');
+    const groups=new Map(), exceptions=[];
+    for(const r of records) {
+      if(r.bad) { exceptions.push({id:r.id||'—',name:r.name||'—',date:'Row '+r.row,issue:'Missing or invalid employee ID, name, or date',times:''}); continue; }
+      if(!groups.has(r.id)) groups.set(r.id,{id:r.id,name:r.name,dept:r.dept,office:r.office||usableLogOffice(r.dept)||"Unassigned",days:new Map()});
+      const emp=groups.get(r.id); if(!emp.days.has(r.date)) emp.days.set(r.date,{date:r.date,punches:[],sourceRows:0,slots:{amIn:null,amOut:null,pmIn:null,pmOut:null}});
+      const day=emp.days.get(r.date); day.sourceRows++; day.punches.push(...r.punches);
+      if(emp.name!==r.name) exceptions.push({id:r.id,name:`${emp.name} / ${r.name}`,date:formatDateKey(r.date),issue:'Same employee ID has different names in the log',times:''});
+    }
+    for(const emp of groups.values()) for(const day of emp.days.values()) {
+      day.punches.sort((a,b)=>a.min-b.min||a.sourceCol-b.sourceCol);
+      const p=day.punches.map(x=>x.min), labels=p.map(timeLabel).join(', '), date=formatDateKey(day.date);
+      const flag=(issue,times=labels)=>exceptions.push({id:emp.id,name:emp.name,date,issue,times});
+      if(day.sourceRows>1) flag(`Duplicate employee/date rows (${day.sourceRows}); punches combined for review`);
+      const morning=p.filter(x=>x>=start&&x<lunchStart);
+      if(morning.length) day.slots.amIn=morning[0];
+      if(morning.length>1) flag(`Multiple AM-window punches; earliest assigned to AM Arrival (${morning.length} punches)`, morning.map(timeLabel).join(', '));
+      const noon=p.filter(x=>x>=lunchStart&&x<=lunchEnd);
+      if(noon.length) day.slots.amOut=noon[0];
+      const afternoonCandidates=p.filter(x=>x>lunchEnd&&x<=pmArrivalEnd);
+      const followingNoon=noon.length ? p.filter(x=>x>noon[0]&&x<=pmArrivalEnd) : [];
+      const arrivals=noon.length ? followingNoon : afternoonCandidates;
+      if(arrivals.length) day.slots.pmIn=arrivals[0];
+      if(arrivals.length>1) flag(`Multiple PM arrival-window punches; earliest assigned to PM Arrival (${arrivals.length} punches)`, arrivals.map(timeLabel).join(', '));
+      if(noon.length===1&&!arrivals.length) flag('Only one noon-window punch; assigned to AM Departure, PM Arrival needs review',noon.map(timeLabel).join(', '));
+      if(noon.length>2) flag(`Extra noon-window punch(es) not assigned (${noon.length-2})`,noon.slice(2).map(timeLabel).join(', '));
+      const evening=p.filter(x=>x>=leaveStart);
+      if(evening.length) day.slots.pmOut=evening[evening.length-1];
+      if(evening.length>1) flag(`Multiple PM departure-window punches; latest assigned to PM Departure (${evening.length} punches)`,evening.map(timeLabel).join(', '));
+      const unassigned=p.filter(x=>x<start || (x>pmArrivalEnd&&x<leaveStart));
+      if(unassigned.length) flag('Punch outside configured assignment windows; not assigned',unassigned.map(timeLabel).join(', '));
+      if(!p.length) flag('No time punches recorded for this employee/date');
+      const missing=[]; if(day.slots.amIn==null)missing.push('AM Arrival'); if(day.slots.amOut==null)missing.push('AM Departure'); if(day.slots.pmIn==null)missing.push('PM Arrival'); if(day.slots.pmOut==null)missing.push('PM Departure');
+      if(missing.length&&p.length) flag('Missing DTR field(s): '+missing.join(', '),'');
+    }
+    return {employees:[...groups.values()].sort((a,b)=>a.name.localeCompare(b.name)),exceptions};
+  }
+  function decodeTemplate() {
+    if(templateOverride) return templateOverride;
+    const s=window.DTR_TEMPLATE_B64;
+    if(!s) throw new Error('The preloaded DTR template is missing. Re-extract the complete app folder.');
+    const raw=atob(s), bytes=new Uint8Array(raw.length);
+    for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+    return bytes;
+  }
+  async function firstSheetPath(zip) {
+    const wb=new DOMParser().parseFromString(await zip.file('xl/workbook.xml').async('text'),'application/xml');
+    const relDoc=new DOMParser().parseFromString(await zip.file('xl/_rels/workbook.xml.rels').async('text'),'application/xml');
+    const sh=wb.getElementsByTagNameNS('*','sheet')[0];
+    const rid=sh?.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id')||sh?.getAttribute('r:id');
+    const rel=[...relDoc.getElementsByTagNameNS('*','Relationship')].find(x=>x.getAttribute('Id')===rid);
+    if(!rel) throw new Error('The DTR template worksheet could not be located.');
+    let p=rel.getAttribute('Target').replace(/^\//,''); if(!p.startsWith('xl/'))p='xl/'+p;
+    if(!zip.file(p)) throw new Error('The DTR template worksheet file is missing.');
+    return p;
+  }
+  async function validateTemplate(bytes) {
+    const zip=await JSZip.loadAsync(bytes), path=await firstSheetPath(zip);
+    const doc=new DOMParser().parseFromString(await zip.file(path).async('text'),'application/xml');
+    const cells=new Set([...doc.getElementsByTagNameNS('*','c')].map(c=>c.getAttribute('r')));
+    const required=['A6','I6','A7','I7','A8','I8','C9','K9','F9','N9','G9','O9'];
+    for(let d=1;d<=31;d++) {
+      const row=13+d;
+      required.push(`A${row}`,`I${row}`,...['B','C','D','E','J','K','L','M'].map(col=>`${col}${row}`));
+    }
+    const missing=required.filter(address=>!cells.has(address));
+    if(missing.length) throw new Error('This workbook does not match the DTR template layout. Please choose a template with the same name, date, and time cells.');
+  }
+  function writeCellValue(doc,address,value) {
+    const found=[...doc.getElementsByTagNameNS('*','c')].find(c=>c.getAttribute('r')===address);
+    if(!found) throw new Error(`Template cell ${address} is missing.`);
+    for(const child of [...found.childNodes]) found.removeChild(child);
+    if(value==null||value==='') { found.removeAttribute('t'); return; }
+    const ns=found.namespaceURI||'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+    if(typeof value==='number') {
+      found.removeAttribute('t'); const v=doc.createElementNS(ns,'v'); v.textContent=String(value); found.appendChild(v);
+    } else {
+      found.setAttribute('t','inlineStr'); const is=doc.createElementNS(ns,'is'), t=doc.createElementNS(ns,'t');
+      t.textContent=String(value); if(/^\s|\s$/.test(String(value)))t.setAttributeNS('http://www.w3.org/XML/1998/namespace','xml:space','preserve');
+      is.appendChild(t); found.appendChild(is);
+    }
+  }
+  function safeSheetName(employee,used) {
+    const invalid=/[\[\]:*?\/\\]/g;
+    const base=String(employee.name||'Employee').toLocaleUpperCase('en-PH').replace(invalid,' ').replace(/^'+|'+$/g,'').trim().slice(0,31)||'Employee';
+    let candidate=base, suffix=String(employee.id||'').replace(invalid,' ').replace(/[^A-Z0-9 ]/gi,'').trim().slice(-8);
+    if(used.has(candidate.toLocaleUpperCase())) {
+      const tag=suffix?` ${suffix}`:' (2)'; candidate=base.slice(0,31-tag.length)+tag;
+      let n=2; while(used.has(candidate.toLocaleUpperCase())) { const ending=` (${++n})`; candidate=base.slice(0,31-ending.length)+ending; }
+    }
+    used.add(candidate.toLocaleUpperCase()); return candidate;
+  }
+  function replaceLocalSheetReference(formula,oldName,newName) {
+    const escapedOld=oldName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    return String(formula||'').replace(new RegExp(`(?:'${escapedOld}'|${escapedOld})!`,'g'),`'${newName.replace(/'/g,"''")}'!`);
+  }
+  async function filledSheetXml(sourceXml,emp,period,division,location) {
+    const doc=new DOMParser().parseFromString(sourceXml,'application/xml');
+    const [year,month]=period.split('-').map(Number), daysInMonth=new Date(Date.UTC(year,month,0)).getUTCDate();
+    const monthName=new Date(Date.UTC(year,month-1,1)).toLocaleString('en-US',{month:'long',timeZone:'UTC'}).toUpperCase();
+    const range=`1-${daysInMonth}`, displayName=emp.name.toLocaleUpperCase('en-PH');
+    writeCellValue(doc,'A6',division); writeCellValue(doc,'I6',division);
+    writeCellValue(doc,'A7',location); writeCellValue(doc,'I7',location);
+    writeCellValue(doc,'A8',displayName); writeCellValue(doc,'I8',displayName);
+    writeCellValue(doc,'C9',monthName); writeCellValue(doc,'K9',monthName);
+    writeCellValue(doc,'F9',range); writeCellValue(doc,'N9',range);
+    writeCellValue(doc,'G9',year); writeCellValue(doc,'O9',year);
+    for(let d=1;d<=31;d++) {
+      const key=`${period}-${String(d).padStart(2,'0')}`, record=emp.days.get(key), slots=record?.slots||{};
+      writeCellValue(doc,`A${13+d}`,d<=daysInMonth?d:''); writeCellValue(doc,`I${13+d}`,d<=daysInMonth?d:'');
+      const values=[slots.amIn,slots.amOut,slots.pmIn,slots.pmOut], denominator=record?.slotDenominator||1440;
+      ['B','C','D','E'].forEach((col,i)=>writeCellValue(doc,`${col}${13+d}`,values[i]==null?'':values[i]/denominator));
+      ['J','K','L','M'].forEach((col,i)=>writeCellValue(doc,`${col}${13+d}`,values[i]==null?'':values[i]/denominator));
+    }
+    return new XMLSerializer().serializeToString(doc);
+  }
+  function nextRelationshipId(relDoc) {
+    const ids=[...relDoc.getElementsByTagNameNS('*','Relationship')].map(node=>Number((node.getAttribute('Id')||'').replace(/^rId/,''))).filter(Number.isFinite);
+    return `rId${Math.max(0,...ids)+1}`;
+  }
+  function freshSheetUid(doc) {
+    const node=[...doc.getElementsByTagNameNS('*','worksheet')][0], attr=[...node.attributes].find(a=>a.localName==='uid');
+    if(!attr)return;
+    const bytes=new Uint8Array(16); crypto.getRandomValues(bytes); bytes[6]=(bytes[6]&15)|64; bytes[8]=(bytes[8]&63)|128;
+    const hex=[...bytes].map(value=>value.toString(16).padStart(2,'0')).join('');
+    attr.value=`{${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}}`;
+  }
+  function updateAppProperties(zip,sheetNames,definedNames) {
+    const file=zip.file('docProps/app.xml'); if(!file)return Promise.resolve();
+    return file.async('text').then(text=>{
+      const doc=new DOMParser().parseFromString(text,'application/xml'), vt='http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes';
+      const counts=[...doc.getElementsByTagNameNS(vt,'i4')]; if(counts[0])counts[0].textContent=String(sheetNames.length); if(counts[1])counts[1].textContent=String(definedNames.length);
+      const vector=[...doc.getElementsByTagNameNS('*','TitlesOfParts')][0]?.getElementsByTagNameNS(vt,'vector')[0];
+      if(vector) {
+        while(vector.firstChild)vector.removeChild(vector.firstChild);
+        const titles=[...sheetNames,...definedNames.map(name=>name.name==='_xlnm.Print_Area'?`${name.sheet}!Print_Area`:name.name)];
+        vector.setAttribute('size',String(titles.length));
+        for(const title of titles){const item=doc.createElementNS(vt,'vt:lpstr');item.textContent=title;vector.appendChild(item);}
+      }
+      zip.file('docProps/app.xml',new XMLSerializer().serializeToString(doc));
+    });
+  }
+  async function buildOfficeWorkbook(employees,period,division,location,onProgress=()=>{}) {
+    const zip=await JSZip.loadAsync(decodeTemplate()), sourcePath=await firstSheetPath(zip), sourceXml=await zip.file(sourcePath).async('text');
+    const workbookDoc=new DOMParser().parseFromString(await zip.file('xl/workbook.xml').async('text'),'application/xml');
+    const relsDoc=new DOMParser().parseFromString(await zip.file('xl/_rels/workbook.xml.rels').async('text'),'application/xml');
+    const typesDoc=new DOMParser().parseFromString(await zip.file('[Content_Types].xml').async('text'),'application/xml');
+    const sheetsNode=[...workbookDoc.getElementsByTagNameNS('*','sheets')][0], existingSheets=[...sheetsNode.getElementsByTagNameNS('*','sheet')];
+    if(!existingSheets.length)throw new Error('The DTR template has no worksheets.');
+    const sourceSheet=existingSheets[0], originalSheetName=sourceSheet.getAttribute('name')||'Template';
+    const mainNs='http://schemas.openxmlformats.org/spreadsheetml/2006/main', relNs='http://schemas.openxmlformats.org/officeDocument/2006/relationships', pkgRelNs='http://schemas.openxmlformats.org/package/2006/relationships', typeNs='http://schemas.openxmlformats.org/package/2006/content-types';
+    const firstName= safeSheetName(employees[0],new Set());
+    sourceSheet.setAttribute('name',firstName);
+    const namesNode=[...workbookDoc.getElementsByTagNameNS('*','definedNames')][0], originalLocalNames=namesNode?[...namesNode.getElementsByTagNameNS('*','definedName')].filter(node=>node.getAttribute('localSheetId')==='0'):[];
+    for(const named of originalLocalNames) named.textContent=replaceLocalSheetReference(named.textContent,originalSheetName,firstName);
+    const sourceFileName=sourcePath.split('/').pop(), sourceRelPath=`xl/worksheets/_rels/${sourceFileName}.rels`, sourceSheetRels=zip.file(sourceRelPath)?await zip.file(sourceRelPath).async('text'):null;
+    const usedSheetNames=new Set([firstName.toLocaleUpperCase()]), finalSheetNames=[firstName];
+    zip.file(sourcePath,await filledSheetXml(sourceXml,employees[0],period,division,location));
+    onProgress(1,employees.length); await paintFrame();
+    let sheetNumber=1, relationshipId=nextRelationshipId(relsDoc);
+    const worksheetType='http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet';
+    for(let i=1;i<employees.length;i++) {
+      let sheetPath;
+      do { sheetPath=`xl/worksheets/sheet${++sheetNumber}.xml`; } while(zip.file(sheetPath));
+      const sheetFileName=sheetPath.split('/').pop(), sheetRelTarget=`worksheets/${sheetFileName}`;
+      const sheetName=safeSheetName(employees[i],usedSheetNames); finalSheetNames.push(sheetName);
+      const xml=await filledSheetXml(sourceXml,employees[i],period,division,location);
+      const sheetDoc=new DOMParser().parseFromString(xml,'application/xml');
+      freshSheetUid(sheetDoc);
+      for(const view of sheetDoc.getElementsByTagNameNS('*','sheetView'))view.removeAttribute('tabSelected');
+      zip.file(sheetPath,new XMLSerializer().serializeToString(sheetDoc));
+      const sheetNode=workbookDoc.createElementNS(mainNs,'sheet'); sheetNode.setAttribute('name',sheetName); sheetNode.setAttribute('sheetId',String(Math.max(...existingSheets.map(node=>Number(node.getAttribute('sheetId'))||0),0)+i)); sheetNode.setAttributeNS(relNs,'r:id',relationshipId);
+      sheetsNode.appendChild(sheetNode);
+      const relNode=relsDoc.createElementNS(pkgRelNs,'Relationship'); relNode.setAttribute('Id',relationshipId); relNode.setAttribute('Type',worksheetType); relNode.setAttribute('Target',sheetRelTarget); relsDoc.documentElement.appendChild(relNode); relationshipId=nextRelationshipId(relsDoc);
+      const override=typesDoc.createElementNS(typeNs,'Override'); override.setAttribute('PartName','/'+sheetPath); override.setAttribute('ContentType','application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml'); typesDoc.documentElement.appendChild(override);
+      if(sourceSheetRels)zip.file(`xl/worksheets/_rels/${sheetFileName}.rels`,sourceSheetRels);
+      if(namesNode) for(const original of originalLocalNames) { const copy=original.cloneNode(true); copy.setAttribute('localSheetId',String(existingSheets.length+i-1)); copy.textContent=replaceLocalSheetReference(original.textContent,originalSheetName,sheetName); namesNode.appendChild(copy); }
+      onProgress(i+1,employees.length); await paintFrame();
+    }
+    const calcPr=[...workbookDoc.getElementsByTagNameNS('*','calcPr')][0]; if(calcPr){calcPr.setAttribute('fullCalcOnLoad','1');calcPr.setAttribute('forceFullCalc','1');}
+    const calcRel=[...relsDoc.getElementsByTagNameNS('*','Relationship')].find(node=>(node.getAttribute('Type')||'').endsWith('/calcChain'));
+    if(calcRel){calcRel.parentNode.removeChild(calcRel);zip.remove('xl/calcChain.xml');}
+    for(const override of [...typesDoc.getElementsByTagNameNS('*','Override')])if((override.getAttribute('PartName')||'')==='/xl/calcChain.xml')override.parentNode.removeChild(override);
+    const allDefined=namesNode?[...namesNode.getElementsByTagNameNS('*','definedName')]:[];
+    await updateAppProperties(zip,finalSheetNames,allDefined.map(node=>({name:node.getAttribute('name'),sheet:finalSheetNames[Number(node.getAttribute('localSheetId'))]||''})));
+    zip.file('xl/workbook.xml',new XMLSerializer().serializeToString(workbookDoc));
+    zip.file('xl/_rels/workbook.xml.rels',new XMLSerializer().serializeToString(relsDoc));
+    zip.file('[Content_Types].xml',new XMLSerializer().serializeToString(typesDoc));
+    return zip.generateAsync({type:'uint8array',compression:'DEFLATE',compressionOptions:{level:4}});
+  }
+  function isGuardRosterEmployee(employee) {
+    return (employee?.offices||[]).some(office=>normalizeName(office).join(' ')==='GUARDS');
+  }
+  function decodeGuardBiff(buffer) {
+    const view=new DataView(buffer), cells=new Map(); let offset=0, recordCount=0;
+    const decoder=new TextDecoder('windows-1252');
+    while(offset+4<=view.byteLength) {
+      const recordId=view.getUint16(offset,true), length=view.getUint16(offset+2,true), start=offset+4;
+      if(length>view.byteLength-start) break;
+      if(recordId===0x0004&&length>=8) {
+        const row=view.getUint16(start,true), col=view.getUint16(start+2,true), textLength=view.getUint8(start+7);
+        const size=Math.min(textLength,Math.max(0,length-8));
+        cells.set(`${row},${col}`,decoder.decode(new Uint8Array(buffer,start+8,size)));
+      }
+      offset=start+length; recordCount++;
+    }
+    if(!recordCount||!cells.size) throw new Error('This .xls file could not be read as a ZKTime event export. Upload the original ZKTime log or save it as .xlsx.');
+    let maxRow=0,maxCol=0;
+    for(const key of cells.keys()) { const [row,col]=key.split(',').map(Number); maxRow=Math.max(maxRow,row); maxCol=Math.max(maxCol,col); }
+    const grid=Array.from({length:maxRow+1},()=>[]);
+    for(const [key,value] of cells) { const [row,col]=key.split(',').map(Number); grid[row][col]=value; }
+    return grid;
+  }
+  function parseGuardTimestamp(value) {
+    if(typeof value==='number'&&Number.isFinite(value)) {
+      const serialDays=Math.floor(value), serialSeconds=Math.round((value-serialDays)*86400);
+      const date=new Date(Date.UTC(1899,11,30)+serialDays*86400000+serialSeconds*1000);
+      return {date:keyDate(date),seconds:date.getUTCHours()*3600+date.getUTCMinutes()*60+date.getUTCSeconds()};
+    }
+    if(value instanceof Date&&!Number.isNaN(value.getTime())) return {date:keyDate(value),seconds:value.getUTCHours()*3600+value.getUTCMinutes()*60+value.getUTCSeconds()};
+    const match=String(value??'').trim().match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})[ ,T]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+    if(!match) return null;
+    const month=Number(match[1]),day=Number(match[2]),year=Number(match[3]); let hour=Number(match[4]);
+    const minute=Number(match[5]),second=Number(match[6]||0),ap=(match[7]||'').toUpperCase();
+    if(ap) hour=(hour%12)+(ap==='PM'?12:0);
+    const date=new Date(Date.UTC(year,month-1,day));
+    if(date.getUTCFullYear()!==year||date.getUTCMonth()!==month-1||date.getUTCDate()!==day||hour>23||minute>59||second>59) return null;
+    return {date:keyDate(date),seconds:hour*3600+minute*60+second};
+  }
+  function parseGuardEvents(grid) {
+    let headerRow=-1,headers=[];
+    for(let r=0;r<Math.min(grid.length,30);r++) {
+      const row=(grid[r]||[]).map(v=>String(v??'').trim().toLowerCase());
+      const name=row.findIndex(v=>v==='name'||v.includes('employee name'));
+      const stamp=row.findIndex(v=>v==='date/time'||v==='datetime'||(v.includes('date')&&v.includes('time')));
+      const status=row.findIndex(v=>v==='status'||v.includes('verify status'));
+      if(name>=0&&stamp>=0&&status>=0){headerRow=r;headers=row;break;}
+    }
+    if(headerRow<0) throw new Error('The guard log needs Name, Date/Time, and Status columns.');
+    const nameCol=headers.findIndex(v=>v==='name'||v.includes('employee name'));
+    const stampCol=headers.findIndex(v=>v==='date/time'||v==='datetime'||(v.includes('date')&&v.includes('time')));
+    const statusCol=headers.findIndex(v=>v==='status'||v.includes('verify status'));
+    const idCol=headers.findIndex(v=>['no.','no','ac-no','employee id','pin','id number'].includes(v));
+    const deptCol=headers.findIndex(v=>v==='department'||v==='dept'||v.includes('office'));
+    const records=[],issues=[];
+    for(let r=headerRow+1;r<grid.length;r++) {
+      const line=grid[r]||[]; if(line.every(v=>v==null||String(v).trim()==='')) continue;
+      const name=String(line[nameCol]??'').trim(), stamp=parseGuardTimestamp(line[stampCol]), status=String(line[statusCol]??'').trim();
+      if(!name||!stamp){issues.push({name:name||'—',date:'Row '+(r+1),issue:!name?'Missing employee name':'Missing or unrecognized punch date/time',times:String(line[stampCol]??'')});continue;}
+      const key=status.toLowerCase().replace(/[^a-z]/g,'');
+      const punchType=key==='cin'||key==='checkin'?'in':key==='cout'||key==='checkout'?'out':null;
+      const id=String(idCol>=0?line[idCol]??'':'').trim()||normalizeName(name).join(' ')||name;
+      records.push({id,name,dept:deptCol>=0?String(line[deptCol]??'').trim():'',date:stamp.date,seconds:stamp.seconds,status,punchType});
+      if(!punchType) issues.push({name,date:formatDateKey(stamp.date),issue:'Unrecognized punch status; not assigned',times:`${timeLabel(Math.floor(stamp.seconds/60))} · ${status||'blank status'}`});
+    }
+    if(!records.length) throw new Error('No dated punch events were found in this guard log.');
+    return {records,issues};
+  }
+  function assignGuardEvents(records,period,initialIssues=[]) {
+    const groups=new Map(),exceptions=[...initialIssues];
+    for(const record of records) {
+      if(!record.date.startsWith(period)) continue;
+      const official=matchOfficialEmployee(record.name);
+      if(!official||!isGuardRosterEmployee(official)) continue;
+      const office='Guards', name=official.name, key=record.id;
+      if(!groups.has(key)) groups.set(key,{id:key,name,dept:record.dept,office,days:new Map()});
+      const employee=groups.get(key);
+      if(!employee.days.has(record.date)) employee.days.set(record.date,{date:record.date,slots:{amIn:null,amOut:null,pmIn:null,pmOut:null},slotDenominator:86400,events:[]});
+      employee.days.get(record.date).events.push(record);
+    }
+    const targets=[
+      {type:'in',isMorning:true,slot:'amIn',label:'AM Arrival'},
+      {type:'out',isMorning:true,slot:'amOut',label:'AM Departure'},
+      {type:'in',isMorning:false,slot:'pmIn',label:'PM Arrival'},
+      {type:'out',isMorning:false,slot:'pmOut',label:'PM Departure'}
+    ];
+    for(const employee of groups.values()) for(const day of employee.days.values()) for(const target of targets) {
+      const matches=day.events.filter(event=>event.punchType===target.type&&(event.seconds<43200)===target.isMorning).sort((a,b)=>a.seconds-b.seconds);
+      if(matches.length) day.slots[target.slot]=target.slot==='pmOut'?matches.at(-1).seconds:matches[0].seconds;
+      if(matches.length>1) exceptions.push({name:employee.name,date:formatDateKey(day.date),issue:`Multiple ${target.type==='in'?'C/In':'C/Out'} punches for ${target.label}; ${target.slot==='pmOut'?'latest':'earliest'} selected`,times:matches.map(event=>timeLabel(Math.floor(event.seconds/60))).join(', ')});
+    }
+    return {employees:[...groups.values()].sort((a,b)=>a.name.localeCompare(b.name)),exceptions};
+  }
+  function safeArchiveComponent(value,fallback='Unassigned') {
+    return String(value||fallback).replace(/[<>:"/\\|?*\x00-\x1F]/g,'_').replace(/[. ]+$/g,'').trim()||fallback;
+  }
+  async function buildExcelArchive(data,period,division,location,onProgress=()=>{}) {
+    const archive=new JSZip(),all=[...data.employees,...(data.guardEmployees||[])].filter(employee=>[...employee.days.keys()].some(key=>key.startsWith(period)));
+    if(!all.length)throw new Error('No DTRs are available for the selected month.');
+    const groups=new Map();
+    for(const employee of all) {
+      const office=employee.office||usableLogOffice(employee.dept)||'Unassigned',key=office.trim().toLocaleUpperCase('en-PH');
+      if(!groups.has(key))groups.set(key,{office,employees:[]});groups.get(key).employees.push(employee);
+    }
+    const monthName=new Date(`${period}-01T00:00:00Z`).toLocaleString('en-US',{month:'long',year:'numeric',timeZone:'UTC'});
+    let completed=0;
+    const usedWorkbookNames=new Set();
+    for(const group of groups.values()) {
+      const base=safeArchiveComponent(group.office,'Office');let workbookName=base,n=2;
+      while(usedWorkbookNames.has(workbookName.toLocaleUpperCase('en-PH')))workbookName=`${base} (${n++})`;
+      usedWorkbookNames.add(workbookName.toLocaleUpperCase('en-PH'));
+      const bytes=await buildOfficeWorkbook(group.employees,period,division,location,(done,total)=>onProgress(completed+done,all.length));
+      archive.file(`${workbookName}.xlsx`,bytes);completed+=group.employees.length;
+    }
+    return archive.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:4}});
+  }
+  function downloadBlob(blob,name) {
+    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+  }
+  function setLoading(show,message='Please wait while the records are processed.') {
+    const overlay=$('loadingOverlay'); overlay.classList.toggle('show',show); overlay.setAttribute('aria-hidden',String(!show));
+    $('loadingText').textContent=message; document.body.style.overflow=show?'hidden':'';
+  }
+  const paintFrame=()=>new Promise(resolve=>requestAnimationFrame(()=>resolve()));
+  function renderExceptions(items) {
+    const body=$('exceptionRows'); body.innerHTML='';
+    const show=items.slice(0,600);
+    for(const e of show) { const tr=document.createElement('tr'); tr.innerHTML=`<td>${esc(e.id)}</td><td>${esc(e.name.toLocaleUpperCase('en-PH'))}</td><td>${esc(e.date)}</td><td>${esc(e.issue)}</td><td>${esc(e.times)}</td>`; body.appendChild(tr); }
+    if(items.length>show.length) { const tr=document.createElement('tr'); tr.innerHTML=`<td colspan="5">Showing first ${show.length} of ${items.length} review items. Download the exception list for all records.</td>`; body.appendChild(tr); }
+    $('exceptionsPanel').style.display=items.length?'block':'none';
+  }
+  function setStatus(message,type='') { const e=$('status'); e.textContent=message; e.className='status '+type; }
+  const dropZone=$('dropZone'), logInput=$('logFile');
+  dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragging');});
+  dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragging'));
+  dropZone.addEventListener('drop',e=>{
+    e.preventDefault();dropZone.classList.remove('dragging');
+    const file=e.dataTransfer?.files?.[0];
+    if(!file)return;
+    if(!/\.xlsx$/i.test(file.name)){setStatus('Select an Excel .xlsx attendance log.','error');return;}
+    const transfer=new DataTransfer();transfer.items.add(file);logInput.files=transfer.files;logInput.dispatchEvent(new Event('change',{bubbles:true}));
+  });
+  $('logFile').addEventListener('change',async e=>{
+    const chosen=e.target.files[0];
+    $('logFileName').textContent=chosen?chosen.name:'No attendance log selected';
+    $('logFileName').classList.toggle('selected',!!chosen);
+    processed=null; $('processBtn').disabled=!e.target.files.length; $('excelBtn').disabled=true; $('csvBtn').disabled=true; $('summary').style.display='none'; $('exceptionsPanel').style.display='none';
+    if(!e.target.files.length){setStatus('Choose a ZKTime .xlsx file to begin.');return;}
+    setLoading(true,'Reading the ZKTime log and checking its columns…'); setStatus('Reading the Excel log…');
+    try {
+      await paintFrame();
+      const grid=await parseXlsx(e.target.files[0]); parsedLog=parseData(grid);
+      const periods=[...new Set(parsedLog.filter(r=>!r.bad).map(r=>r.date.slice(0,7)))].sort();
+      if(!periods.length) throw new Error('No valid attendance dates were found.');
+      $('period').value=periods[periods.length-1]; activePeriod=$('period').value; if(guardLog)refreshGuardUploadStatus();
+      setStatus(`${parsedLog.length} log rows read. Confirm the month, then click Start Process.`, 'success');
+    } catch(err) { parsedLog=null; $('processBtn').disabled=true; setStatus(err.message||String(err),'error'); }
+    finally { setLoading(false); }
+  });
+  $("officialNamesFile").addEventListener("change",async e=>{
+    const file=e.target.files[0]; if(!file)return;
+    setLoading(true,"Reading the official employee names workbook…"); setStatus("Checking the official name list…");
+    try {
+      await paintFrame(); const grid=await parseXlsx(file); const employees=extractOfficialEmployees(grid);
+      if(!employees.length) throw new Error("No employee names were found. Names should appear below the office headings in the first worksheet.");
+      officialEmployees=employees; officialNames=employees.map(employee=>employee.name); officialNamesPreloaded=false;
+      try { localStorage.setItem("dtrOfficialNames.v1",JSON.stringify(officialEmployees)); } catch { throw new Error("The list was read, but this browser could not save it locally. Check browser storage settings and try again."); }
+      updateOfficialNamesStatus(); e.target.value=""; if(guardLog)refreshGuardUploadStatus();
+      processed=null; $('excelBtn').disabled=true; $('csvBtn').disabled=true; $('summary').style.display='none'; $('exceptionsPanel').style.display='none';
+      setStatus(`${officialNames.length} official employee names saved in this browser. Biometric log employees will remain included. Click Start Process again to apply the list.`,`success`);
+    } catch(err) { setStatus(err.message||String(err),"error"); }
+    finally { setLoading(false); }
+  });
+  $("clearOfficialNames").addEventListener("click",()=>{
+    try { localStorage.removeItem("dtrOfficialNames.v1"); } catch {}
+    officialEmployees=preloadedOfficialEmployees.map(employee=>({name:employee.name,offices:Array.isArray(employee.offices)?employee.offices:[]}));
+    officialNames=officialEmployees.map(employee=>employee.name); officialNamesPreloaded=officialEmployees.length>0||officialNames.length>0;
+    updateOfficialNamesStatus(); $("officialNamesFile").value=""; if(guardLog)refreshGuardUploadStatus();
+    setStatus(officialNamesPreloaded?"Using the preloaded official name list.":"Saved official name list removed. Names will be kept as recorded in the biometric log.");
+  });
+  $('templateFile').addEventListener('change',async e=>{
+    const file=e.target.files[0]; if(!file)return;
+    setLoading(true,'Checking the replacement DTR template…'); setStatus('Checking the selected DTR template…');
+    try {
+      await paintFrame();
+      const candidate=new Uint8Array(await file.arrayBuffer());
+      await validateTemplate(candidate);
+      templateOverride=candidate;
+      $('templateFileName').textContent=`Using ${file.name}`;
+      $('templateStatusText').textContent='REPLACEMENT ACTIVE';
+      $('templateFormat').textContent='Compatible layout';
+      $('templateReset').hidden=false;
+      setStatus('Replacement DTR template loaded successfully.','success');
+    } catch(err) { setStatus(err.message||String(err),'error'); }
+    finally { setLoading(false); }
+  });
+  $('templateReset').addEventListener('click',()=>{
+    templateOverride=null; $('templateFile').value='';
+    $('templateFileName').textContent='Using the preloaded agency template';
+    $('templateStatusText').textContent='PRELOADED TEMPLATE';
+    $('templateFormat').textContent='Legal · Portrait';
+    $('templateReset').hidden=true;
+    setStatus('Using the preloaded agency DTR template.');
+  });
+  $('processBtn').addEventListener('click',async()=>{
+    if(!parsedLog)return;
+    setLoading(true,'Sorting employee and optional guard punches…');await paintFrame();
+    try {
+      activePeriod=$('period').value;if(!/^\d{4}-\d{2}$/.test(activePeriod))throw new Error('Choose a valid DTR month.');
+      if(guardInput.files.length&&!guardLog)throw new Error('The guards log could not be read. Remove it or upload a valid file, then process again.');
+      const records=parsedLog.filter(r=>r.bad||r.date.startsWith(activePeriod));
+      const regularRecords=records.filter(r=>r.bad||!isGuardRosterEmployee(matchOfficialEmployee(r.name)));
+      const correctedRecords=regularRecords.map(r=>{
+        if(r.bad)return r;
+        const official=matchOfficialEmployee(r.name);
+        return {...r,name:official?official.name:r.name,office:official?officeForEmployee(official,r.dept):(usableLogOffice(r.dept)||'Unassigned')};
+      });
+      const correctedIds=new Set(correctedRecords.filter((r,i)=>!r.bad&&regularRecords[i].name!==r.name).map(r=>r.id));
+      const regularData=assignPunches(correctedRecords);
+      const guardData=guardLog?assignGuardEvents(guardLog.records,activePeriod,guardLog.issues.filter(item=>item.date.startsWith('Row ')||item.date.startsWith(activePeriod))):{employees:[],exceptions:[]};
+      const guardSkipped=(guardLog?.skippedNames||[]).map(name=>({id:'',name,date:'',issue:'Name not found in the official Guards list; excluded from DTR generation',times:''}));
+      processed={employees:regularData.employees,guardEmployees:guardData.employees,exceptions:[...regularData.exceptions,...guardData.exceptions,...guardSkipped]};
+      if(!processed.employees.length&&!processed.guardEmployees.length)throw new Error('No employee or guard records matched the selected month.');
+      const allEmployees=[...processed.employees,...processed.guardEmployees];
+      const dayCount=allEmployees.reduce((n,e)=>n+[...e.days.keys()].filter(k=>k.startsWith(activePeriod)).length,0);
+      $('employeeCount').textContent=allEmployees.filter(e=>[...e.days.keys()].some(k=>k.startsWith(activePeriod))).length;
+      $('dayCount').textContent=dayCount;$('exceptionCount').textContent=processed.exceptions.length;
+      $('periodLabel').textContent=new Date(`${activePeriod}-01T00:00:00Z`).toLocaleString('en-US',{month:'short',year:'numeric',timeZone:'UTC'});
+      $('summary').style.display='grid';renderExceptions(processed.exceptions);
+      $('excelBtn').disabled=false;$('csvBtn').disabled=!processed.exceptions.length;
+      const nameNote=officialNames.length?`${correctedIds.size} official name correction(s) applied; names without a clear match remain as recorded.`:'Biometric employee names were kept as recorded.';
+      const guardNote=guardLog?`${processed.guardEmployees.length} guard DTR(s) matched to the Guards list.`:'No guards log uploaded; guards are omitted.';
+      setStatus(`Prepared ${processed.employees.length} regular employee DTR(s) and ${processed.guardEmployees.length} guard DTR(s) across ${new Set(allEmployees.map(employee=>(employee.office||'Unassigned').toLocaleUpperCase())).size} office/unit workbook(s). ${nameNote} ${guardNote} Review ${processed.exceptions.length} item(s) before certification.`,processed.exceptions.length?'':'success');
+    }catch(error){processed=null;$('excelBtn').disabled=true;setStatus(error.message||String(error),'error');}
+    finally{setLoading(false);}
+  });
+  $('excelBtn').addEventListener('click',async()=>{
+    if(!processed)return;$('excelBtn').disabled=true;setLoading(true,'Building one template-based workbook per office…');setStatus('Preparing employee DTR sheets and optional guard sheets for the ZIP.');
+    try {
+      await paintFrame();
+      const blob=await buildExcelArchive(processed,activePeriod,$('division').value,$('location').value,(done,total)=>$('loadingText').textContent=`Building office workbooks · DTR ${done} of ${total}…`);
+      const monthName=new Date(`${activePeriod}-01T00:00:00Z`).toLocaleString('en-US',{month:'long',year:'numeric',timeZone:'UTC'});
+      downloadBlob(blob,`SDO Romblon DTR - ${monthName}.zip`);
+      setStatus('Downloaded the office DTR workbooks and any included guard DTRs.','success');
+    }catch(error){setStatus(error.message||String(error),'error');}
+    finally{$('excelBtn').disabled=false;setLoading(false);}
+  });
+  const guardInput=$('guardLogFile');
+  function setGuardStatus(message,type=''){const status=$('guardStatus');status.textContent=message;status.className='guard-status '+type;}
+  function showGuardRosterNames(records) {
+    const included=new Map(),skipped=new Set();
+    for(const record of records) {
+      const official=matchOfficialEmployee(record.name);
+      if(official&&isGuardRosterEmployee(official)) included.set(official.name,official);
+      else skipped.add(record.name.toLocaleUpperCase('en-PH'));
+    }
+    const names=[...included.keys()].sort((a,b)=>a.localeCompare(b));
+    $('guardNames').replaceChildren(...names.map(name=>{const item=document.createElement('li');item.textContent=name;return item;}));
+    $('guardResults').classList.toggle('show',!!records.length);
+    return {names,skipped:[...skipped].sort()};
+  }
+  function refreshGuardUploadStatus() {
+    if(!guardLog)return;
+    const period=$('period').value, monthRecords=guardLog.records.filter(record=>record.date.startsWith(period));
+    const matches=showGuardRosterNames(monthRecords); guardLog.skippedNames=matches.skipped;
+    if(!monthRecords.length) { $('guardReview').textContent='No guard punches were found for the selected DTR month.'; setGuardStatus('No punches found for this month. No guards will be included.', 'error'); return; }
+    const skippedNote=matches.skipped.length?` ${matches.skipped.length} unmatched name(s) are excluded and will appear in the review list.`:'';
+    $('guardReview').textContent=matches.skipped.length?`Not in the official Guards list: ${matches.skipped.slice(0,8).join(', ')}${matches.skipped.length>8?`, and ${matches.skipped.length-8} more`:''}`:'All names shown are matched to the official Guards list.';
+    setGuardStatus(`${matches.names.length} official guard name(s) matched for ${period}.${skippedNote}`,matches.names.length?'success':'error');
+  }
+  const guardDrop=$('guardDropZone');
+  for(const type of ['dragenter','dragover'])guardDrop.addEventListener(type,event=>{event.preventDefault();guardDrop.classList.add('dragging');});
+  for(const type of ['dragleave','drop'])guardDrop.addEventListener(type,event=>{event.preventDefault();guardDrop.classList.remove('dragging');});
+  guardDrop.addEventListener('drop',event=>{const file=event.dataTransfer?.files?.[0];if(!file)return;const transfer=new DataTransfer();transfer.items.add(file);guardInput.files=transfer.files;guardInput.dispatchEvent(new Event('change',{bubbles:true}));});
+  guardInput.addEventListener('change',async event=>{
+    const file=event.target.files?.[0];guardLog=null;processed=null;$('excelBtn').disabled=true;$('csvBtn').disabled=true;$('summary').style.display='none';$('exceptionsPanel').style.display='none';
+    $('guardFileName').textContent=file?.name||'No guards log selected';$('guardFileName').classList.toggle('selected',!!file);$('clearGuardLog').hidden=!file;$('guardResults').classList.remove('show');
+    if(!file){setGuardStatus('Optional: guards will be omitted unless a guards log is uploaded.');if(parsedLog)setStatus('Guards will be omitted from the DTR ZIP. Click Start Process to continue.');return;}
+    try {
+      setLoading(true,'Reading the optional guards punch log…');await paintFrame();
+      const isLegacyXls=/\.xls$/i.test(file.name)&&! /\.xlsx$/i.test(file.name);
+      const grid=isLegacyXls?decodeGuardBiff(await file.arrayBuffer()):await parseXlsx(file);
+      const parsed=parseGuardEvents(grid);
+      if(!officialEmployees.some(isGuardRosterEmployee))throw new Error('The official roster has no names in its Guards column.');
+      if(!$('period').value){$('period').value=[...new Set(parsed.records.map(record=>record.date.slice(0,7)))].sort().at(-1)||'';}
+      guardLog=parsed;refreshGuardUploadStatus();
+      processed=null;$('processBtn').disabled=!parsedLog;
+      if(parsedLog)setStatus('Guards log is ready. Click Start Process to review both logs, then download the combined DTR ZIP.','success');
+    } catch(error){guardLog=null;setGuardStatus(error.message||String(error),'error');}
+    finally{setLoading(false);}
+  });
+  $('clearGuardLog').addEventListener('click',()=>{guardInput.value='';guardInput.dispatchEvent(new Event('change',{bubbles:true}));});
+  $('period').addEventListener('change',()=>{processed=null;$('excelBtn').disabled=true;$('csvBtn').disabled=true;if(guardLog)refreshGuardUploadStatus();if(parsedLog)setStatus('DTR month changed. Click Start Process to update both employee and guard DTRs.');});
+  $('csvBtn').addEventListener('click',()=>{
+    if(!processed)return; const rows=[['Employee ID','Employee','Date','Issue','Times'],...processed.exceptions.map(e=>[e.id,e.name,e.date,e.issue,e.times])];
+    const csv=rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+    const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download=`DTR_Exceptions_${activePeriod}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+  });
+})();
+const siteSplash = document.getElementById('siteSplash');
+const splashStartedAt = Date.now();
+function dismissSiteSplash() {
+  const delay = Math.max(0, 650 - (Date.now() - splashStartedAt));
+  window.setTimeout(() => siteSplash && siteSplash.classList.add('is-done'), delay);
+}
+window.addEventListener('load', dismissSiteSplash, { once:true });
+window.setTimeout(dismissSiteSplash, 5000);
+</script>
+</body>
+</html>
