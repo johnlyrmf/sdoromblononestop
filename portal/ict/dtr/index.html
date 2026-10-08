@@ -247,16 +247,16 @@
           <div class="guard-results" id="guardResults"><h4>Guards matched to the official list</h4><ul class="guard-name-list" id="guardNames"></ul><div class="guard-review" id="guardReview"></div></div>
         </div>
         <div class="source-card name-list-card">
-          <div class="card-heading"><div><span class="mini-eyebrow">PRIVATE ROSTER · OPTIONAL</span><h3>Official employee names</h3></div><span class="tag">LOCAL TO THIS BROWSER</span></div>
-          <p class="card-hint">Upload the approved roster if you want names and office assignments matched. The roster is kept in this browser and is not sent to OneStop.</p>
+          <div class="card-heading"><div><span class="mini-eyebrow">OFFICIAL ROSTER · PRELOADED</span><h3>Official employee names</h3></div><span class="tag">PRELOADED LIST</span></div>
+          <p class="card-hint">Approved employee names and office assignments load automatically. You can upload a replacement roster for a local override in this browser.</p>
           <input id="officialNamesFile" class="file-input-hidden" type="file" accept=".xlsx" aria-label="Upload the official employee names workbook">
           <label class="drop-zone" for="officialNamesFile">
             <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></span>
-            <span class="drop-copy"><strong>Choose the private official roster</strong><small>Excel .xlsx · saved only in this browser</small></span>
+            <span class="drop-copy"><strong>Choose a roster for this browser</strong><small>Excel .xlsx · local override only</small></span>
             <span class="browse-button">Browse files</span>
           </label>
           <div class="name-list-actions"><div class="file-meta" id="officialNamesStatus" aria-live="polite">No official list saved in this browser</div><button class="name-list-clear" id="clearOfficialNames" type="button" hidden>Remove saved list</button></div>
-          <p class="name-list-note">Without a roster, names stay as recorded in the log and its department is used as the office. Guards are processed from their separate log.</p>
+          <p class="name-list-note">Names are matched against the preloaded list where possible. Unmatched names and guards continue through the existing review rules.</p>
         </div>
         <div class="source-card template-card">
           <div>
@@ -321,6 +321,7 @@
 <div class="loading-backdrop" id="loadingOverlay" role="status" aria-live="polite" aria-hidden="true"><div class="loading-card"><div class="spinner" aria-hidden="true"></div><h3>Preparing your DTRs</h3><p id="loadingText">Please wait while the records are processed.</p><div class="progress-track"><span></span></div></div></div>
 <script src="assets/jszip.min.js"></script>
 <script src="assets/template-data.js"></script>
+<script src="assets/official-roster-data.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -331,8 +332,9 @@
   let guardLog = null;
   const preloadedOfficialEmployees = Array.isArray(window.DTR_PRELOADED_OFFICIAL_EMPLOYEES) ? window.DTR_PRELOADED_OFFICIAL_EMPLOYEES : [];
   const preloadedOfficialNames = Array.isArray(window.DTR_PRELOADED_OFFICIAL_NAMES) ? window.DTR_PRELOADED_OFFICIAL_NAMES : preloadedOfficialEmployees.map(employee=>employee.name);
-  let officialNamesPreloaded = preloadedOfficialEmployees.length > 0 || preloadedOfficialNames.length > 0;
-  let officialEmployees = officialNamesPreloaded ? preloadedOfficialEmployees.map(employee=>({name:employee.name,offices:Array.isArray(employee.offices)?employee.offices:[]})) : readSavedOfficialEmployees();
+  const savedOfficialEmployees = readSavedOfficialEmployees();
+  let officialNamesPreloaded = savedOfficialEmployees.length === 0 && (preloadedOfficialEmployees.length > 0 || preloadedOfficialNames.length > 0);
+  let officialEmployees = savedOfficialEmployees.length ? savedOfficialEmployees : preloadedOfficialEmployees.map(employee=>({name:employee.name,offices:Array.isArray(employee.offices)?employee.offices:[]}));
   let officialNames = officialEmployees.map(employee=>employee.name);
   const timeToMin = v => { if (!v) return NaN; const [h,m] = v.split(':').map(Number); return h*60+m; };
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

@@ -8,8 +8,7 @@ This folder is the dedicated DTR application within the SDO Romblon OneStop port
 - Attendance files are selected and processed in the browser. Never upload attendance logs, generated workbooks, or exception reports to a server.
 - `assets/template-data.js` contains the preloaded official workbook template. Keep it with this app.
 - Keep the JSZip library and its license together in `assets/` and `licenses/`.
-- The official employee roster is intentionally not bundled here because public static assets can be downloaded without signing in. The app supports uploading the roster workbook and saves the extracted names and office labels in the local browser only.
-- Do not add source attendance logs, employee roster workbooks, generated DTRs, or other private personnel data to this folder or Git.
+- The approved employee display names and office labels are explicitly approved by the user for public preload in `assets/official-roster-data.js`; public static assets can be downloaded without signing in. Keep the source roster workbook ignored and untracked. Do not include employee IDs, contact details, source attendance logs, generated DTRs, or other private personnel data.
 
 ## OneStop integration
 
