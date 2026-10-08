@@ -84,7 +84,7 @@ service cloud.firestore {
         && request.resource.data.updatedAt != null
         && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.requesterUid == request.auth.uid
         && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.trackingNumber == trackingCode
-        && request.resource.data.service == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.service
+        && request.resource.data['service'] == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data['service']
         && request.resource.data.requesterName == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.requesterName
         && request.resource.data.requesterEmail == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.requesterEmail;
       allow update: if isICTStaff()
@@ -94,7 +94,7 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'service', 'requesterName', 'requesterEmail'])
         && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.trackingNumber == trackingCode
         && getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.status == request.resource.data.status
-        && request.resource.data.service == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.service
+        && request.resource.data['service'] == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data['service']
         && request.resource.data.requesterName == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.requesterName
         && request.resource.data.requesterEmail == getAfter(/databases/$(database)/documents/requests/$(trackingCode)).data.requesterEmail;
       allow delete: if isAdmin();
