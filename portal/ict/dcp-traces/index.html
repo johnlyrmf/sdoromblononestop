@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07142d">
+  <meta name="description" content="SDO Romblon DCP Traces interactive school map">
+  <title>DCP Traces · Romblon OneStop ICT</title>
+  <link rel="stylesheet" href="vendor/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="map-fullscreen.css">
+</head>
+<body class="dcp-locked">
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../../ict-dashboard.html" aria-label="Back to the ICT workspace">
+        <span class="brand-mark"><img src="../../../assets/logos/deped-romblon.png" alt="SDO Romblon seal"></span>
+        <span class="brand-title"><small>SCHOOLS DIVISION OFFICE</small><strong>Romblon DCP Traces</strong></span>
+      </a>
+      <nav class="primary-nav" aria-label="Main navigation">
+        <button class="nav-link active" type="button" data-view="map-view">School Map</button>
+        <button class="nav-link" type="button" data-view="directory-view">School Directory</button>
+        <button class="nav-link" type="button" data-view="upload-view">Import schools</button>
+      </nav>
+      <a class="dcp-back" href="../../ict-dashboard.html" aria-label="Back to ICT workspace"><span class="dcp-back-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 12H5m0 0 6-6m-6 6 6 6"/></svg></span><span class="dcp-back-full" aria-hidden="true">Back to ICT workspace</span><span class="dcp-back-short" aria-hidden="true">Back to ICT</span></a>
+    </div>
+  </header>
+
+  <div id="dcp-access-message" class="dcp-access-message" role="alert" hidden></div>
+
+  <main class="shell">
+    <div class="title-row">
+      <div><p class="eyebrow">SDO ROMBLON · ICT INVENTORY</p><h1 id="page-title">School map</h1><p class="lede" id="page-description">Explore schools, resources and connectivity across Romblon.</p></div>
+      <div class="count-pill" id="count-pill">Loading schools</div>
+    </div>
+
+    <section class="toolbar" aria-label="School filters">
+      <label class="search-wrap"><span class="search-icon" aria-hidden="true">⌕</span><span class="sr-only">Search school name or School ID</span><input id="search" type="search" placeholder="Search school name or School ID" autocomplete="off"></label>
+      <label class="select-wrap"><span class="sr-only">Filter by district</span><select id="district"><option value="">All districts</option></select></label>
+      <label class="select-wrap"><span class="sr-only">Filter by municipality</span><select id="municipality"><option value="">All municipalities</option></select></label>
+      <label class="select-wrap"><span class="sr-only">Filter by school level</span><select id="level"><option value="">All school levels</option><option value="Elementary">Elementary</option><option value="Secondary">Secondary</option></select></label>
+      <button id="clear-filters" class="clear-filters" type="button" hidden>Clear filters</button>
+    </section>
+
+    <section id="map-view" class="view active" aria-label="School map">
+      <div class="map-layout" id="map-layout">
+        <div class="map-card">
+          <div id="map" role="application" aria-label="Interactive map of Romblon municipalities and school locations"></div>
+          <div class="map-controls"><button id="zoom-in" type="button" aria-label="Zoom in">+</button><button id="zoom-out" type="button" aria-label="Zoom out">−</button><button id="reset-view" class="reset-button" type="button">◎ <span>Reset view</span></button></div>
+          <div class="map-legend"><span><i class="legend-pin" aria-hidden="true"></i> Schools</span><span><i class="legend-selected" aria-hidden="true"></i> Selected school</span></div>
+          <span class="map-note" id="map-note">Loading school records</span>
+        </div>
+        <aside class="school-panel" id="school-panel" aria-live="polite" hidden>
+          <div class="panel-top"><span class="panel-kicker">SELECTED SCHOOL</span><button id="close-panel" class="close-button" type="button" aria-label="Close school details">×</button></div>
+          <h2 id="school-name"></h2>
+          <div class="school-meta"><span id="school-id"></span><span class="level-pill" id="school-level"></span></div>
+          <div class="school-fields"><div><span>District</span><strong id="school-district"></strong></div><div><span>Municipality</span><strong id="school-municipality"></strong></div><div><span>Barangay</span><strong id="school-barangay"></strong></div></div>
+          <div class="metrics"><div class="metric"><div><strong id="teachers">—</strong><span>Teachers</span></div></div><div class="metric"><div><strong id="devices">—</strong><span>Equipment records</span></div></div><div class="metric"><div><strong id="laptops">—</strong><span>Donated laptops</span></div></div><div class="metric"><div><strong id="packages">—</strong><span>DCP packages</span></div></div></div>
+          <p class="data-note" id="data-note"></p>
+          <div class="equipment-summary"><h3>Equipment breakdown</h3><p id="equipment-breakdown"></p><p id="donation-summary"></p></div>
+          <div class="condition"><h3>Reported equipment condition</h3><div class="condition-bar"><span id="condition-functional" style="width:0%"></span></div><div class="condition-legend"><span><i></i>Serviceable <strong id="functional">—</strong></span><span><i></i>Needs attention <strong id="attention">—</strong></span></div></div>
+          <div class="connectivity"><h3>Connectivity</h3><p><i class="status-dot"></i><span id="connectivity"></span></p></div>
+          <p class="source-note" id="source-note"></p>
+          <button id="directory-button" class="directory-button" type="button">Open in directory</button>
+        </aside>
+      </div>
+    </section>
+
+    <section id="directory-view" class="view" aria-label="School directory" hidden><div class="directory-card"><div class="directory-heading"><h2>School directory</h2><p>Browse imported school records across Romblon.</p></div><div id="directory-list" class="directory-list"></div><p id="empty-state" class="empty-state" hidden>No schools match these filters. Try another search.</p></div></section>
+    <section id="upload-view" class="view" aria-label="Import school workbooks" hidden>
+      <div class="directory-card dcp-upload-card">
+        <div class="dcp-import-heading"><div><span class="dcp-section-label">ICT INVENTORY · SCHOOL DATA</span><h2>Import school workbooks</h2><p>Review each school's details and location before adding it to the live map.</p></div><span class="dcp-private-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> ICT workspace</span></div>
+        <div id="dcp-service-status" class="dcp-service-status" role="alert" hidden></div>
+        <input id="dcp-files" type="file" accept=".xlsx" multiple hidden>
+        <div id="dcp-dropzone" class="dcp-dropzone" role="button" tabindex="0" aria-label="Choose or drop Excel school inventory files">
+          <span class="dcp-upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></span>
+          <span class="dcp-drop-copy"><strong>Drop Excel files here</strong><small>Upload one school or a group of school workbooks</small></span>
+          <span class="dcp-browse-button">Browse files</span>
+        </div>
+        <div class="dcp-upload-meta"><span>.XLSX school inventory template</span><span>Original files stay on your computer</span></div>
+        <div id="dcp-progress" class="dcp-progress" role="status" aria-live="polite" hidden><span class="dcp-spinner" aria-hidden="true"></span><div><strong id="dcp-progress-title">Reading workbooks</strong><span id="dcp-progress-detail">Preparing files…</span></div></div>
+        <div id="dcp-preview" class="dcp-preview" aria-live="polite"></div>
+        <div class="dcp-import-actions"><button id="dcp-save" class="directory-button dcp-save-button" type="button" disabled><span class="dcp-button-spinner" aria-hidden="true"></span><span id="dcp-save-label">Save valid schools</span></button><p id="dcp-import-status" class="dcp-import-status" role="status"></p></div>
+      </div>
+    </section>
+    <p class="footer-note">School summaries from the ICT inventory · Municipality outlines from geoBoundaries</p>
+  </main>
+  <div id="dcp-page-loader" class="dcp-page-loader" role="status" aria-live="polite" aria-label="Opening ICT workspace" hidden>
+    <div class="dcp-loader-orbit dcp-loader-orbit-one" aria-hidden="true"></div><div class="dcp-loader-orbit dcp-loader-orbit-two" aria-hidden="true"></div>
+    <div class="dcp-loader-card"><span class="dcp-loader-logo"><img src="../../../assets/logos/deped-romblon.png" alt=""></span><span class="dcp-loader-spinner" aria-hidden="true"></span><strong>SDO Romblon OneStop</strong><small>Opening ICT workspace</small><span class="dcp-loader-progress" aria-hidden="true"><i></i></span></div>
+  </div>
+  <script src="vendor/leaflet.js"></script>
+  <script src="data/romblon-municipalities.js"></script>
+  <script src="data/schools.js"></script>
+  <script src="vendor/jszip.min.js"></script>
+  <script src="app.js"></script>
+  <script type="module" src="firebase-map.js"></script>
+</body>
+</html>

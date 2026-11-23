@@ -168,12 +168,12 @@ function encodeMimeMessage({ to, sender, requesterName, depedEmail, temporaryPas
   return Buffer.from(mime, 'utf8').toString('base64url');
 }
 
-async function getAuthorizedIctProfile(uid, email) {
+async function getAuthorizedIctProfile(uid) {
   const profileSnapshot = await db.doc(`users/${uid}`).get();
   const profile = profileSnapshot.exists ? profileSnapshot.data() : {};
   const unit = String(profile.unitId || profile.unit || '').toLowerCase();
-  const isAuthorized = email?.toLowerCase() === 'sdo@deped.gov.ph'
-    || ((unit === 'ict unit' || profile.role === 'admin') && (profile.active === true || profile.status === 'active'));
+  const isAuthorized = (unit === 'ict unit' || profile.role === 'admin')
+    && (profile.active === true || profile.status === 'active');
   if (!isAuthorized) throw new HttpsError('permission-denied', 'Only active ICT staff can send activation notices.');
   return profile;
 }
@@ -184,7 +184,7 @@ exports.sendCredentialEmail = onCall({
   enforceAppCheck: false,
 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in as ICT staff first.');
-  await getAuthorizedIctProfile(request.auth.uid, request.auth.token.email || '');
+  await getAuthorizedIctProfile(request.auth.uid);
 
   const data = request.data || {};
   const requestId = requiredText(data.requestId, 'Request ID');
@@ -360,7 +360,7 @@ exports.createUnitStaffAccount = onCall({
     const resetLink = await auth.generatePasswordResetLink(email);
     await sendUnitWelcomeEmail({
       to: email,
-      sender: request.auth.token.email || 'sdo@deped.gov.ph',
+      sender: request.auth.token.email || 'ictu@sdoromblon.com',
       displayName,
       unitName,
       resetLink,

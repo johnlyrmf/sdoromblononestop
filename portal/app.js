@@ -55,13 +55,19 @@ const ictRequestCatalog = {
 function normalizeSharedHeader() {
   const header = document.querySelector('.site-header');
   if (!header) return;
+  const staffWorkspace = document.body.classList.contains('ict-dashboard-shell');
   header.innerHTML = `
     <a class="brand" href="index.html" aria-label="SDO Romblon OneStop home">
       <span class="sdo-logo logo-mask"><img src="../assets/logos/deped-romblon.png" alt="SDO Romblon seal" /></span>
       <span class="brand-copy"><small>Schools Division Office</small><strong>Romblon OneStop</strong></span>
     </a>
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation"><span></span><span></span><span></span><b>Menu</b></button>
-    <nav class="site-nav" id="site-navigation" aria-label="Primary navigation">
+    <nav class="site-nav${staffWorkspace ? ' staff-nav' : ''}" id="site-navigation" aria-label="${staffWorkspace ? 'ICT workspace navigation' : 'Primary navigation'}">
+      ${staffWorkspace ? `
+      <a href="#ict-requests">Requests</a>
+      <a href="ict/dtr/">DTR generator</a>
+      <a href="ict/dcp-traces/">DCP Traces</a>
+      ` : `
       <div class="nav-dropdown">
         <button class="nav-dropdown-trigger" type="button" aria-expanded="false" aria-controls="unit-menu">Choose a unit <span class="chevron" aria-hidden="true"></span></button>
         <div class="unit-menu" id="unit-menu">
@@ -74,6 +80,7 @@ function normalizeSharedHeader() {
       </div>
       <a href="how-it-works.html">How it works</a>
       <a href="help.html">Help</a>
+      `}
       <a class="nav-sign-in" href="sign-in.html">Sign in <span>→</span></a>
     </nav>`;
 }
@@ -153,6 +160,7 @@ const commandEntries = [
 ];
 
 function addCommandSearch() {
+  if (document.body.classList.contains('ict-dashboard-shell')) return;
   const header = document.querySelector('.site-header');
   if (!header) return;
 

@@ -34,7 +34,7 @@ The rules allow:
 
 ## 4. Provision the first ICT staff account
 
-The current prototype has one tightly restricted bootstrap account: `sdo@deped.gov.ph`. When that exact verified Google account signs in for the first time, the frontend creates its ICT administrator profile automatically. Other accounts are still rejected until ICT provisions them.
+The bootstrap administrator is the existing Firebase Authentication user with UID `df9UYDLfn2Ve0l4OgbQ5qIrm3rA3` and email `ictu@sdoromblon.com`. On its first sign-in, the frontend creates its ICT administrator profile automatically. This account uses email/password only; it does not require email verification or a working mailbox. The UID check prevents a different unverified account with the same email from creating an administrator profile. Publish the updated Firestore rules before this first sign-in. Other accounts require ICT provisioning. After confirming the new administrator can sign in, deactivate the old administrator's `users/{UID}` profile if it belongs to a separate Authentication user.
 
 If you prefer manual provisioning later, create this Firestore document after the account exists in Firebase Authentication:
 

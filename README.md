@@ -7,6 +7,7 @@ This workspace contains the starting concept for the Schools Division Office of 
 - `assets/logos/` — official logos supplied for the project
 - `docs/` — the proposed system design and architecture
 - `portal/` — a visual starter page for the public portal
+- `portal/ict/dcp-traces/` — ICT school map, directory, and Excel import using the existing Firebase project
 - `firebase/` — Firestore rules, indexes, deployment configuration, and Firebase/Google Drive notes
 
 ## Initial product direction

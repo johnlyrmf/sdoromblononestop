@@ -362,6 +362,27 @@ body.auth-page-shell { background:var(--navy-950); }
   .ict-review-modal-actions .ict-submit-preview,.ict-review-modal-actions .ict-back-edit { width:100%; }
 }
 
+/* The signed-in ICT workspace uses staff destinations in its header. */
+.ict-dashboard-shell:not(.staff-ready) .site-nav,
+.ict-dashboard-shell:not(.staff-ready) .menu-toggle { visibility:hidden; }
+.ict-dashboard-shell .staff-nav { gap:7px; }
+.ict-dashboard-shell .staff-nav > a:not(.nav-sign-in) { color:#51617b; font-size:13px; font-weight:700; padding:10px 13px; white-space:nowrap; }
+.ict-dashboard-shell .staff-nav > a:not(.nav-sign-in):hover,
+.ict-dashboard-shell .staff-nav > a:not(.nav-sign-in):focus-visible { background:#edf2f9; color:#0b1f46; }
+.ict-dashboard-shell .staff-nav > a[href="#ict-requests"] { background:#eaf0f8; color:#0b1f46; }
+.ict-dashboard-shell .staff-nav > a.nav-sign-in { margin-left:8px; }
+#ict-requests { scroll-margin-top:86px; }
+@media (max-width:1000px) and (min-width:781px) {
+  .ict-dashboard-shell .site-header { padding-left:30px; padding-right:30px; }
+  .ict-dashboard-shell .staff-nav { gap:2px; }
+  .ict-dashboard-shell .staff-nav > a:not(.nav-sign-in) { padding:9px 8px; font-size:12px; }
+}
+@media (max-width:780px) {
+  .ict-dashboard-shell .staff-nav { gap:4px; }
+  .ict-dashboard-shell .staff-nav > a:not(.nav-sign-in) { width:100%; min-height:44px; padding:11px 13px; }
+  .ict-dashboard-shell .staff-nav > a.nav-sign-in { margin-left:0; }
+}
+
 /* ICT request action modal */
 .ict-action-modal-card { max-width:780px; width:min(100%,780px); }
 .ict-action-modal-card .modal-scroll-content { max-height:min(760px,calc(100svh - 28px)); padding:22px 24px; }
@@ -1598,6 +1619,10 @@ body.auth-page-shell { background:var(--navy-950); }
 .requester-reply-message-status[hidden] { display:block !important; min-height:16px; visibility:hidden; }
 .requester-reply-message-status[data-kind="error"] { color:#a83e35; }
 .requester-reply-message-status[data-kind="success"] { color:#476b45; }
+
+.auth-card #auth-message { font-size:13px; line-height:1.5; }
+.auth-card #auth-message[data-kind="error"] { color:#ffe4e4; }
+.auth-card #auth-message[data-kind="success"] { color:#e1f5e3; }
 .request-detail-footer .modal-primary-action { background:#17345d; border:1px solid #17345d; border-radius:10px; color:#fff; flex:0 0 auto; font-size:13px; min-height:46px; min-width:150px; position:relative; }
 .request-detail-footer .modal-primary-action.is-loading::after { margin:0; position:absolute; right:13px; top:calc(50% - 5.5px); vertical-align:initial; }
 .request-detail-footer .modal-primary-action:hover,

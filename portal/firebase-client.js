@@ -33,6 +33,8 @@ const auth = app ? getAuth(app) : null;
 const db = app ? getFirestore(app) : null;
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
+const bootstrapAdminUid = 'df9UYDLfn2Ve0l4OgbQ5qIrm3rA3';
+const bootstrapAdminEmail = 'ictu@sdoromblon.com';
 
 const rememberStaffStorageKey = 'onestop-remember-staff';
 const rememberStaffCheckbox = $('#remember-staff');
@@ -98,12 +100,22 @@ function requireFirebase() {
 }
 
 async function getApprovedProfile(user) {
-  const profileSnapshot = await getDoc(doc(db, 'users', user.uid));
+  let profileSnapshot;
+  try {
+    profileSnapshot = await getDoc(doc(db, 'users', user.uid));
+  } catch (error) {
+    if (error.code === 'permission-denied') {
+      const accessError = new Error('Staff profile access is blocked. Publish the updated Firestore rules or have ICT provision this account.');
+      accessError.code = 'auth/profile-permission-denied';
+      throw accessError;
+    }
+    throw error;
+  }
   if (!profileSnapshot.exists()) {
-    if (user.email?.toLowerCase() === 'sdo@deped.gov.ph') {
+    if (user.uid === bootstrapAdminUid && user.email?.toLowerCase() === bootstrapAdminEmail) {
       const bootstrapProfile = {
         displayName: user.displayName || 'SDO OneStop Administrator',
-        email: user.email,
+        email: bootstrapAdminEmail,
         unitId: 'ICT Unit',
         role: 'admin',
         status: 'active',
@@ -135,6 +147,7 @@ function showAuthError(error) {
     'auth/popup-blocked': 'Your browser blocked the Google sign-in window. Allow pop-ups and try again.',
     'auth/not-provisioned': 'This account has not been provisioned by ICT.',
     'auth/account-disabled': 'This account is not active. Please contact ICT.',
+    'auth/profile-permission-denied': 'Staff profile access is blocked. Publish the updated Firestore rules or have ICT provision this account.',
   };
   setMessage('#auth-message', messages[error.code] || error.message || 'Sign-in could not be completed.', 'error');
 }
@@ -149,6 +162,11 @@ async function finishStaffSignIn(user) {
   window.location.href = 'index.html';
 }
 
+async function handleStaffSignInError(error) {
+  if (auth?.currentUser) await signOut(auth).catch(() => {});
+  showAuthError(error);
+}
+
 async function signInWithGoogleAccount() {
   if (!requireFirebase()) return;
   try {
@@ -156,12 +174,14 @@ async function signInWithGoogleAccount() {
     const result = await signInWithPopup(auth, googleProvider);
     await finishStaffSignIn(result.user);
   } catch (error) {
-    if (auth?.currentUser) await signOut(auth).catch(() => {});
-    showAuthError(error);
+    await handleStaffSignInError(error);
   }
 }
 
-async function signInWithStaffCredentials() {
+let staffSignInPending = false;
+async function signInWithStaffCredentials(event) {
+  event.preventDefault();
+  if (staffSignInPending) return;
   if (!requireFirebase()) return;
   const email = $('#staff-email')?.value.trim();
   const password = $('#staff-password')?.value;
@@ -169,20 +189,22 @@ async function signInWithStaffCredentials() {
     setMessage('#auth-message', 'Enter your official email and password.', 'error');
     return;
   }
+  staffSignInPending = true;
   try {
     await setStaffSignInPersistence();
     const result = await signInWithEmailAndPassword(auth, email, password);
     await finishStaffSignIn(result.user);
   } catch (error) {
-    if (auth?.currentUser) await signOut(auth).catch(() => {});
-    showAuthError(error);
+    await handleStaffSignInError(error);
+  } finally {
+    staffSignInPending = false;
   }
 }
 
 const googleButton = $('.auth-official-action');
-const staffSignInButton = $('.auth-submit');
+const staffSignInForm = $('.auth-form');
 if (googleButton) googleButton.addEventListener('click', signInWithGoogleAccount);
-if (staffSignInButton) staffSignInButton.addEventListener('click', signInWithStaffCredentials);
+if (staffSignInForm) staffSignInForm.addEventListener('submit', signInWithStaffCredentials);
 
 function makeTrackingNumber() {
   const random = new Uint32Array(1);
@@ -567,8 +589,11 @@ if (dashboard && isFirebaseConfigured) {
       if (profileUnit.toLowerCase() !== 'ict unit' && profile.role !== 'admin') throw new Error('This unit is not yet enabled for queue access.');
       if (!profileUnit) throw new Error('This account is not assigned to an SDO unit.');
       activeStaffProfile = profile;
+      document.body.classList.add('staff-ready');
       const dtrToolCard = $('#ict-dtr-tool');
       if (dtrToolCard) dtrToolCard.hidden = profileUnit.toLowerCase() !== 'ict unit' && profile.role !== 'admin';
+      const dcpToolCard = $('#ict-dcp-tool');
+      if (dcpToolCard) dcpToolCard.hidden = profileUnit.toLowerCase() !== 'ict unit' && profile.role !== 'admin';
       const resetStaffButton = document.querySelector('[data-open-password-reset]');
       if (resetStaffButton) resetStaffButton.hidden = profileUnit.toLowerCase() !== 'ict unit';
       const emailApplicationsCard = document.querySelector('.ict-email-applications-card');
@@ -582,7 +607,7 @@ if (dashboard && isFirebaseConfigured) {
       const name = $('#staff-name');
       const email = $('#staff-email-label');
       if (name) name.textContent = profile.displayName || user.displayName || 'Staff member';
-      if (email) email.textContent = profile.email || user.email || '';
+      if (email) email.textContent = user.email || profile.email || '';
       onSnapshot(query(collection(db, 'requests'), where('unitId', '==', profileUnit)), renderIctQueue, (error) => setMessage('#ict-dashboard-message', error.message, 'error'));
       onSnapshot(query(collection(db, 'request_events'), where('senderRole', '==', 'requester')), renderLatestRequesterReplies, (error) => setMessage('#ict-dashboard-message', error.message, 'error'));
     } catch (error) {

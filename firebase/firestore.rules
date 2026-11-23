@@ -38,19 +38,49 @@ service cloud.firestore {
         ) || (
           signedIn()
           && request.auth.uid == userId
-          && request.auth.token.email == 'sdo@deped.gov.ph'
+          && userId == 'df9UYDLfn2Ve0l4OgbQ5qIrm3rA3'
+          && request.auth.token.email == 'ictu@sdoromblon.com'
         );
       allow create: if isAdmin()
         || (
           signedIn()
           && request.auth.uid == userId
-          && request.auth.token.email == 'sdo@deped.gov.ph'
-          && request.resource.data.email == 'sdo@deped.gov.ph'
+          && userId == 'df9UYDLfn2Ve0l4OgbQ5qIrm3rA3'
+          && request.auth.token.email == 'ictu@sdoromblon.com'
+          && request.resource.data.keys().hasOnly(['displayName', 'email', 'unitId', 'role', 'status', 'active', 'createdAt'])
+          && request.resource.data.email == 'ictu@sdoromblon.com'
           && request.resource.data.unitId == 'ICT Unit'
           && request.resource.data.role == 'admin'
           && request.resource.data.status == 'active'
+          && request.resource.data.active == true
         );
       allow update, delete: if isAdmin();
+    }
+
+    // School-level DCP summaries stay inside the ICT workspace.
+    match /dcp_schools/{schoolId} {
+      allow read: if isICTStaff();
+      allow create, update: if isICTStaff()
+        && schoolId.matches('^[0-9]{6}$')
+        && request.resource.data.keys().hasOnly([
+          'id', 'name', 'district', 'municipality', 'barangay', 'level',
+          'lat', 'lng', 'teachers', 'equipmentRecords', 'laptops',
+          'donatedLaptops', 'donatedDevices', 'dcpLabeledRows', 'dcpPackages',
+          'itemCounts', 'functional', 'attention', 'connectivity', 'sourceFile',
+          'sourceHash', 'importedOn', 'parserVersion', 'warnings', 'uploadedBy', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll(['id', 'name', 'district', 'municipality', 'lat', 'lng', 'uploadedBy', 'updatedAt'])
+        && request.resource.data.id == schoolId
+        && request.resource.data.uploadedBy == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 160
+        && request.resource.data.district is string
+        && request.resource.data.municipality is string
+        && request.resource.data.lat is number
+        && request.resource.data.lat >= 11.5 && request.resource.data.lat <= 13.3
+        && request.resource.data.lng is number
+        && request.resource.data.lng >= 121.4 && request.resource.data.lng <= 122.7;
+      allow delete: if isAdmin();
     }
 
     match /requests/{requestId} {
