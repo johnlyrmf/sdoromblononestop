@@ -64,9 +64,11 @@ service cloud.firestore {
         && schoolId.matches('^[0-9]{6}$')
         && request.resource.data.keys().hasOnly([
           'id', 'name', 'district', 'municipality', 'barangay', 'level',
-          'lat', 'lng', 'teachers', 'equipmentRecords', 'laptops',
+          'lat', 'lng', 'address', 'schoolHead', 'headPosition', 'schoolContact',
+          'teachers', 'personnel', 'equipmentRecords', 'laptops',
           'donatedLaptops', 'donatedDevices', 'dcpLabeledRows', 'dcpPackages',
-          'itemCounts', 'functional', 'attention', 'connectivity', 'sourceFile',
+          'itemCounts', 'functional', 'attention', 'connectivity',
+          'internetProviders', 'mobileSignals', 'mobileQuality', 'sourceFile',
           'sourceHash', 'importedOn', 'parserVersion', 'warnings', 'uploadedBy', 'updatedAt'
         ])
         && request.resource.data.keys().hasAll(['id', 'name', 'district', 'municipality', 'lat', 'lng', 'uploadedBy', 'updatedAt'])
@@ -74,6 +76,8 @@ service cloud.firestore {
         && request.resource.data.uploadedBy == request.auth.uid
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 160
+        && request.resource.data.personnel is list
+        && request.resource.data.personnel.size() <= 1000
         && request.resource.data.district is string
         && request.resource.data.municipality is string
         && request.resource.data.lat is number

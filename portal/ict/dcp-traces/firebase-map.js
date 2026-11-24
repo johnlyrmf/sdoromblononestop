@@ -51,7 +51,7 @@ function previewItem(result) {
   if (result.record) {
     const stats = document.createElement('div');
     stats.className = 'dcp-preview-stats';
-    for (const value of [`${result.record.teachers} teachers`, `${result.record.equipmentRecords} equipment records`, `${result.record.lat}, ${result.record.lng}`]) {
+    for (const value of [`${result.record.teachers} teachers`, `${result.record.personnel.length} personnel`, `${result.record.equipmentRecords} equipment records`, `${result.record.lat}, ${result.record.lng}`]) {
       const chip = document.createElement('span'); chip.textContent = value; stats.append(chip);
     }
     body.append(stats);

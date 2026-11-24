@@ -15,6 +15,8 @@ SDO Romblon OneStop is the Schools Division Office of Romblon's service portal. 
 - ICT administrator-only actions, account creation, and request deletion must remain protected by trusted role checks.
 - The initial ICT administrator is pinned to Firebase Authentication UID `df9UYDLfn2Ve0l4OgbQ5qIrm3rA3` and email `ictu@sdoromblon.com`. Its email has no inbox, so bootstrap access must use the exact UID rather than email verification or email alone.
 - DCP Traces lives at `portal/ict/dcp-traces/` and opens from an ICT staff tool card. It uses the existing Firebase Authentication session and a separate `dcp_schools` Firestore collection; only active ICT staff and administrators may read or write summaries. Original Excel files remain in the uploader's browser and are not saved.
+- The DCP school panel keeps school name and ID in a compact fixed header while details scroll below. Its collapsible profile uses selected Stakeholder Profile fields (school head, position, address, school contact) and selected Internet Connectivity answers. Existing records gain these fields when the school workbook is reuploaded.
+- The ICT-only personnel modal stores and displays each named person's name, position, Mobile No. 1, and active/inactive status from the Personnel sheet. Exclude the template's Unidentified placeholder. Do not store employee IDs, Mobile No. 2, emails, or hire and separation details. Existing school records gain the personnel list when reuploaded.
 
 ## Security and tracking
 

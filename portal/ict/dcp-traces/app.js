@@ -1,6 +1,18 @@
 /* School summaries arrive through the protected OneStop Firestore collection. */
 
 const $ = id => document.getElementById(id);
+function displaySchoolContact(value){
+  const raw=String(value??'').trim();
+  if(!raw)return '';
+  const scientific=/^\d+(?:\.\d+)?e\+?\d+$/i.test(raw);
+  const number=scientific?Number(raw):null;
+  const digits=(scientific&&Number.isSafeInteger(number)?String(number):raw).replace(/[\s()-]/g,'');
+  return /^9\d{9}$/.test(digits)?`0${digits}`
+    : /^639\d{9}$/.test(digits)?`+${digits}`
+      : /^(?:09\d{9}|\+639\d{9})$/.test(digits)?digits:raw;
+}
+const personnelModal=$('personnel-modal');
+let personnelReturnFocus=null;
 const map = L.map('map',{zoomControl:false,scrollWheelZoom:true,attributionControl:true,preferCanvas:true,zoomSnap:.5});
 map.attributionControl.setPrefix(false);
 map.attributionControl.addAttribution('Municipality boundaries © geoBoundaries · CC BY 3.0 IGO');
@@ -49,11 +61,53 @@ function schoolMatches(s){
     (!$('municipality').value||s.municipality===$('municipality').value)&&
     (!$('level').value||s.level===$('level').value);
 }
+function renderPersonnel(s){
+  const entries=Array.isArray(s.personnel)?s.personnel.filter(person=>person&&person.name&&!/\bunidentified\b/i.test(person.name)):[];
+  const legacy=(s.parserVersion||1)<3;
+  $('personnel-count-label').textContent=legacy?'Reupload template to view':`${entries.length} personnel recorded`;
+  $('personnel-modal-title').textContent=s.name;
+  $('personnel-modal-subtitle').textContent=`School ID ${s.id} · ${s.district}`;
+  $('personnel-modal-footer-count').textContent=`${entries.length} personnel`;
+  const rows=$('personnel-rows');
+  rows.replaceChildren();
+  for(const person of entries){
+    const row=document.createElement('tr');
+    for(const value of [person.name,person.position||'Not listed']){
+      const cell=document.createElement('td');
+      cell.textContent=value;
+      row.append(cell);
+    }
+    const mobileCell=document.createElement('td');
+    mobileCell.textContent=person.mobile||'Not listed';
+    row.append(mobileCell);
+    const statusCell=document.createElement('td');
+    const badge=document.createElement('span');
+    badge.className=`personnel-status${person.inactive?' is-inactive':''}`;
+    badge.textContent=person.inactive?'Inactive':'Active';
+    statusCell.append(badge);
+    row.append(statusCell);
+    rows.append(row);
+  }
+  $('personnel-table-wrap').hidden=!entries.length;
+  $('personnel-empty').hidden=!!entries.length;
+  $('personnel-empty-title').textContent=legacy?'Personnel not imported yet':'No records found';
+  $('personnel-empty-detail').textContent=legacy
+    ? 'Reupload this school’s latest workbook to show its personnel list.'
+    : 'No named personnel entries were found in this school’s workbook.';
+}
+function closePersonnel(){
+  if(!personnelModal.open||personnelModal.classList.contains('is-closing'))return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){personnelModal.close();return;}
+  personnelModal.classList.add('is-closing');
+  window.setTimeout(()=>personnelModal.close(),180);
+}
 function selectSchool(id,fly=true){
   const s=schools.find(item=>item.id===id);if(!s)return;
+  const changed=selectedId!==id;
   selectedId=id;
   $('map-layout').classList.remove('panel-closed');
   $('school-panel').hidden=false;
+  if(changed)$('school-panel-scroll').scrollTop=0;
   $('school-name').textContent=s.name;
   $('school-id').textContent=`School ID ${s.id}`;
   $('school-level').textContent=s.level;
@@ -65,14 +119,27 @@ function selectSchool(id,fly=true){
   $('laptops').textContent=s.donatedLaptops ?? '—';
   $('packages').textContent=s.dcpPackages ?? '—';
   $('data-note').textContent=s.dcpPackages==null?'DCP package count needs verification':`${s.dcpPackages} verified DCP packages`;
+  const legacyProfile=(s.parserVersion||1)<2;
+  const missingProfile=legacyProfile?'Reupload to view':'Not provided in workbook';
+  $('profile-update-note').hidden=!legacyProfile;
+  $('school-head').textContent=s.schoolHead||missingProfile;
+  $('head-position').textContent=s.headPosition||missingProfile;
+  $('school-address').textContent=s.address||missingProfile;
+  $('school-contact').textContent=displaySchoolContact(s.schoolContact)||missingProfile;
+  $('all-laptops').textContent=s.laptops??'—';
+  $('donated-devices').textContent=s.donatedDevices??'—';
   $('equipment-breakdown').textContent=Object.entries(s.itemCounts||{}).map(([name,count])=>`${count} ${name.toLowerCase()}${count===1?'':'s'}`).join(' · ')||'No item breakdown available';
-  $('donation-summary').textContent=`${s.donatedDevices??'—'} donated devices recorded`;
   $('functional').textContent=s.functional??'—';
   $('attention').textContent=s.attention??'—';
   const conditionTotal=(s.functional||0)+(s.attention||0);
   $('condition-functional').style.width=conditionTotal?`${100*(s.functional||0)/conditionTotal}%`:'0%';
   $('connectivity').textContent=s.connectivity||'Not verified from the inventory workbook';
+  const missingConnectivity=legacyProfile?'Reupload to view':'Not reported';
+  $('internet-providers').textContent=Array.isArray(s.internetProviders)&&s.internetProviders.length?s.internetProviders.join(', '):missingConnectivity;
+  $('mobile-signals').textContent=Array.isArray(s.mobileSignals)&&s.mobileSignals.length?s.mobileSignals.join(', '):missingConnectivity;
+  $('mobile-quality').textContent=s.mobileQuality||missingConnectivity;
   $('source-note').textContent=`Source: ${s.sourceFile||'School inventory'} · Imported ${s.importedOn||'date unavailable'}`;
+  renderPersonnel(s);
   renderMarkers();
   if(fly&&activeView==='map-view')map.flyTo([s.lat,s.lng],Math.max(map.getZoom(),11),{duration:.45});
 }
@@ -157,6 +224,25 @@ $('zoom-in').addEventListener('click',()=>map.zoomIn());
 $('zoom-out').addEventListener('click',()=>map.zoomOut());
 $('reset-view').addEventListener('click',resetView);
 $('close-panel').addEventListener('click',()=>{$('map-layout').classList.add('panel-closed');requestAnimationFrame(()=>map.invalidateSize())});
+$('open-personnel').addEventListener('click',()=>{
+  const school=schools.find(item=>item.id===selectedId);
+  if(!school)return;
+  personnelReturnFocus=document.activeElement;
+  renderPersonnel(school);
+  personnelModal.showModal();
+  $('personnel-close').focus();
+});
+for(const id of ['personnel-close','personnel-done'])$(id).addEventListener('click',closePersonnel);
+personnelModal.addEventListener('cancel',event=>{event.preventDefault();closePersonnel()});
+personnelModal.addEventListener('click',event=>{
+  const bounds=personnelModal.getBoundingClientRect();
+  if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)closePersonnel();
+});
+personnelModal.addEventListener('close',()=>{
+  personnelModal.classList.remove('is-closing');
+  personnelReturnFocus?.focus();
+  personnelReturnFocus=null;
+});
 $('directory-button').addEventListener('click',()=>{$('search').value=selectedId;applyFilters();setView('directory-view')});
 let leavingForIct=false;
 document.querySelectorAll('a[href="../../ict-dashboard.html"]').forEach(link=>link.addEventListener('click',event=>{

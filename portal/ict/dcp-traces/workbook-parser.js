@@ -8,7 +8,20 @@ const xml = text => {
 const nodes = (parent, tag) => [...parent.getElementsByTagName(tag)];
 const firstText = (parent, tag) => parent.getElementsByTagName(tag)[0]?.textContent ?? '';
 const titleCase = value => String(value || '').trim().toLowerCase().replace(/\b\p{L}/gu, letter => letter.toUpperCase());
+const tidy = value => String(value ?? '').trim().replace(/\s+/g, ' ');
 const check = value => /^(✓|✔|true|yes|1)$/i.test(String(value || '').trim());
+const mobileNumber = value => {
+  const raw = tidy(value);
+  if (!raw || raw === '0') return '';
+  const scientific = /^\d+(?:\.\d+)?e\+?\d+$/i.test(raw);
+  const number = scientific ? Number(raw) : null;
+  const digits = (scientific && Number.isSafeInteger(number) ? String(number) : raw).replace(/[\s()-]/g, '');
+  // Excel numeric cells discard a Philippine mobile number's leading zero.
+  const mobile = /^9\d{9}$/.test(digits) ? `0${digits}`
+    : /^639\d{9}$/.test(digits) ? `+${digits}`
+      : /^(?:09\d{9}|\+639\d{9})$/.test(digits) ? digits : raw;
+  return mobile;
+};
 
 async function readSheets(file) {
   if (!window.JSZip) throw new Error('The Excel reader did not load.');
@@ -66,16 +79,33 @@ export async function parseSchoolWorkbook(file) {
   const district = /\bdistrict$/i.test(districtBase) ? districtBase : `${districtBase} District`;
   const municipality = titleCase(at(profile, 10, 'D'));
   const barangay = titleCase(at(profile, 12, 'D'));
+  const street = tidy(at(profile, 13, 'D'));
+  const province = titleCase(at(profile, 9, 'D'));
+  const address = [street, barangay, municipality, province].filter(Boolean).join(', ');
+  const schoolHead = tidy(at(profile, 25, 'D'));
+  const headPosition = tidy(at(profile, 26, 'D'));
+  const schoolContact = mobileNumber([21, 22, 23].map(row => tidy(at(profile, row, 'D'))).find(Boolean) || '');
   const lng = Number(at(profile, 39, 'D'));
   const lat = Number(at(profile, 40, 'D'));
   if (!/^\d{6}$/.test(id) || !name || !districtBase || !municipality) throw new Error('School ID, name, district, or municipality is missing.');
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < 11.5 || lat > 13.3 || lng < 121.4 || lng > 122.7) throw new Error('The school coordinates are missing or outside the Romblon area.');
 
   let teachers = 0;
+  const personnelList = [];
   for (const [row, cells] of personnel) {
-    if (row < 3 || check(cells.T)) continue;
-    if (/^(?:Master\s+)?Teacher\b/i.test(String(cells.J || '').trim())) teachers++;
+    if (row < 3) continue;
+    const firstName = tidy(cells.D);
+    const lastName = tidy(cells.C);
+    if (!firstName && !lastName) continue;
+    if (/^unidentified$/i.test(lastName) || tidy(cells.B) === '9999') continue;
+    const name = [firstName, tidy(cells.E), lastName, tidy(cells.F)].filter(Boolean).join(' ');
+    const position = tidy(cells.J);
+    const inactive = check(cells.T);
+    const mobile = mobileNumber(cells.M);
+    personnelList.push({ name, position, mobile, inactive });
+    if (!inactive && /^(?:Master\s+)?Teacher\b/i.test(position)) teachers++;
   }
+  if (personnelList.length > 1000) throw new Error('The Personnel sheet has more than 1,000 named entries. Ask ICT to review this workbook before importing it.');
 
   let equipmentRecords = 0, laptops = 0, donatedLaptops = 0, donatedDevices = 0, functional = 0, attention = 0, dcpLabeledRows = 0, dcpConflicts = 0;
   const itemCounts = {};
@@ -99,17 +129,29 @@ export async function parseSchoolWorkbook(file) {
   if (functional + attention < equipmentRecords) warnings.push(`${equipmentRecords - functional - attention} equipment records have no recognized condition.`);
   if (!teachers) warnings.push('No Teacher or Master Teacher positions were counted.');
   const internet = sheets['Internet Connectivity'];
-  const connectivity = internet && String(at(internet, 23, 'D')).trim() && Number(at(internet, 34, 'D')) === 0
-    ? 'Subscription marked in workbook; ISP details unavailable'
-    : 'Not verified from inventory workbook';
+  const internetProviders = internet ? Array.from({ length: 9 }, (_, index) => 25 + index)
+    .filter(row => check(at(internet, row, 'E')))
+    .map(row => tidy(at(internet, row, 'D')))
+    .filter(Boolean) : [];
+  const mobileSignals = internet ? Array.from({ length: 5 }, (_, index) => 16 + index)
+    .filter(row => check(at(internet, row, 'E')))
+    .map(row => tidy(at(internet, row, 'D')))
+    .filter(Boolean) : [];
+  const mobileQuality = tidy(at(internet, 22, 'E'));
+  const connectivity = check(at(internet, 23, 'E')) ? 'Internet subscription reported'
+    : check(at(internet, 21, 'E')) ? 'Mobile data reported; subscription not confirmed'
+      : 'Not verified from inventory workbook';
+  if (check(at(internet, 23, 'E')) && !internetProviders.length) warnings.push('Internet subscription is marked, but no subscribed provider is selected.');
   const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
   const sourceHash = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
   const record = {
     id, name: titleCase(name), district, municipality, barangay,
+    address, schoolHead, headPosition, schoolContact,
     level: /\b(?:HS|HIGH SCHOOL|NHS|SHS)\b/i.test(name) ? 'Secondary' : /\b(?:ES|ELEMENTARY SCHOOL)\b/i.test(name) ? 'Elementary' : 'Unspecified',
-    lat, lng, teachers, equipmentRecords, laptops, donatedLaptops, donatedDevices,
+    lat, lng, teachers, personnel: personnelList, equipmentRecords, laptops, donatedLaptops, donatedDevices,
     dcpLabeledRows, dcpPackages: null, itemCounts, functional, attention, connectivity,
-    sourceFile: file.name, sourceHash, importedOn: new Date().toISOString().slice(0, 10), parserVersion: 1, warnings,
+    internetProviders, mobileSignals, mobileQuality,
+    sourceFile: file.name, sourceHash, importedOn: new Date().toISOString().slice(0, 10), parserVersion: 3, warnings,
   };
   return { record, warnings };
 }
