@@ -29,6 +29,9 @@ let selectedId=null;
 let activeView='map-view';
 let fullBounds=null;
 let overviewCamera=null;
+let personnelEntries=[];
+let personnelLegacy=false;
+let personnelSchoolId=null;
 
 function setInitialOverview(){
   if(!fullBounds)return;
@@ -61,18 +64,16 @@ function schoolMatches(s){
     (!$('municipality').value||s.municipality===$('municipality').value)&&
     (!$('level').value||s.level===$('level').value);
 }
-function renderPersonnel(s){
-  const entries=Array.isArray(s.personnel)?s.personnel.filter(person=>person&&person.name&&!/\bunidentified\b/i.test(person.name)):[];
-  const legacy=(s.parserVersion||1)<3;
-  $('personnel-count-label').textContent=legacy?'Reupload template to view':`${entries.length} personnel recorded`;
-  $('personnel-modal-title').textContent=s.name;
-  $('personnel-modal-subtitle').textContent=`School ID ${s.id} · ${s.district}`;
-  $('personnel-modal-footer-count').textContent=`${entries.length} personnel`;
+const positionKey=value=>(String(value??'').trim().replace(/\s+/g,' ')||'Not listed').toLocaleLowerCase();
+function renderPersonnelRows(){
+  const selectedPosition=$('personnel-position-filter').value;
+  const entries=selectedPosition?personnelEntries.filter(person=>positionKey(person.position)===selectedPosition):personnelEntries;
+  $('personnel-modal-footer-count').textContent=selectedPosition?`${entries.length} of ${personnelEntries.length} personnel`:`${entries.length} personnel`;
   const rows=$('personnel-rows');
   rows.replaceChildren();
   for(const person of entries){
     const row=document.createElement('tr');
-    for(const value of [person.name,person.position||'Not listed']){
+    for(const value of [person.name,String(person.position||'').trim()||'Not listed']){
       const cell=document.createElement('td');
       cell.textContent=value;
       row.append(cell);
@@ -90,10 +91,34 @@ function renderPersonnel(s){
   }
   $('personnel-table-wrap').hidden=!entries.length;
   $('personnel-empty').hidden=!!entries.length;
-  $('personnel-empty-title').textContent=legacy?'Personnel not imported yet':'No records found';
-  $('personnel-empty-detail').textContent=legacy
+  $('personnel-empty-title').textContent=personnelLegacy?'Personnel not imported yet':selectedPosition?'No matching personnel':'No records found';
+  $('personnel-empty-detail').textContent=personnelLegacy
     ? 'Reupload this school’s latest workbook to show its personnel list.'
+    : selectedPosition ? 'Choose another position to view personnel.'
     : 'No named personnel entries were found in this school’s workbook.';
+}
+function renderPersonnel(s){
+  const filter=$('personnel-position-filter');
+  const previousPosition=personnelSchoolId===s.id?filter.value:'';
+  personnelSchoolId=s.id;
+  const hasPersonnel=Array.isArray(s.personnel);
+  personnelEntries=hasPersonnel?s.personnel.filter(person=>person&&person.name&&!/\bunidentified\b/i.test(person.name)):[];
+  personnelLegacy=!hasPersonnel;
+  $('personnel-total').textContent=hasPersonnel?personnelEntries.length:'—';
+  $('personnel-count-label').textContent=personnelLegacy?'Reupload template to view':`${personnelEntries.length} personnel recorded`;
+  $('personnel-modal-title').textContent=s.name;
+  $('personnel-modal-subtitle').textContent=`School ID ${s.id} · ${s.district}`;
+  const positions=new Map();
+  for(const person of personnelEntries){
+    const label=String(person.position||'Not listed').trim()||'Not listed';
+    const key=positionKey(label);
+    if(!positions.has(key))positions.set(key,label);
+  }
+  filter.replaceChildren(new Option('All Positions',''),...[...positions].sort((a,b)=>a[1].localeCompare(b[1],undefined,{sensitivity:'base'})).map(([key,label])=>new Option(label,key)));
+  filter.value=previousPosition;
+  if(filter.selectedIndex<0)filter.value='';
+  filter.disabled=!personnelEntries.length;
+  renderPersonnelRows();
 }
 function closePersonnel(){
   if(!personnelModal.open||personnelModal.classList.contains('is-closing'))return;
@@ -114,7 +139,6 @@ function selectSchool(id,fly=true){
   $('school-district').textContent=s.district;
   $('school-municipality').textContent=s.municipality;
   $('school-barangay').textContent=s.barangay;
-  $('teachers').textContent=s.teachers ?? '—';
   $('devices').textContent=s.equipmentRecords ?? '—';
   $('laptops').textContent=s.donatedLaptops ?? '—';
   $('packages').textContent=s.dcpPackages ?? '—';
@@ -228,10 +252,12 @@ $('open-personnel').addEventListener('click',()=>{
   const school=schools.find(item=>item.id===selectedId);
   if(!school)return;
   personnelReturnFocus=document.activeElement;
+  $('personnel-position-filter').value='';
   renderPersonnel(school);
   personnelModal.showModal();
   $('personnel-close').focus();
 });
+$('personnel-position-filter').addEventListener('change',renderPersonnelRows);
 for(const id of ['personnel-close','personnel-done'])$(id).addEventListener('click',closePersonnel);
 personnelModal.addEventListener('cancel',event=>{event.preventDefault();closePersonnel()});
 personnelModal.addEventListener('click',event=>{

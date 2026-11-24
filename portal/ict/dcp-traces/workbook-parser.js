@@ -127,7 +127,6 @@ export async function parseSchoolWorkbook(file) {
   const warnings = [];
   if (dcpConflicts) warnings.push(`${dcpConflicts} DCP-labeled equipment rows also have Non-DCP checked; package count remains unverified.`);
   if (functional + attention < equipmentRecords) warnings.push(`${equipmentRecords - functional - attention} equipment records have no recognized condition.`);
-  if (!teachers) warnings.push('No Teacher or Master Teacher positions were counted.');
   const internet = sheets['Internet Connectivity'];
   const internetProviders = internet ? Array.from({ length: 9 }, (_, index) => 25 + index)
     .filter(row => check(at(internet, row, 'E')))
